@@ -1,0 +1,41 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        laravel:
+         - '"laravel/framework:5.5.*" "orchestra/testbench:3.5.*"'
+         - '"laravel/framework:5.6.*" "orchestra/testbench:3.6.*"'
+         - '"laravel/framework:5.7.*" "orchestra/testbench:3.7.*"'
+         - '"laravel/framework:5.8.*" "orchestra/testbench:3.8.*"'
+         - '"laravel/framework:6.*" "orchestra/testbench:4.*"'
+
+        composer_flags: [--prefer-lowest, --prefer-stable]
+
+        php: [7.1, 7.2, 7.3]
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    # removed from "run"
+    # composer config discard-changes true
+    # composer self-update
+
+    - name: Prepare composer.json for test
+      run: |
+        composer require ${{ matrix.laravel }} --no-interaction --no-update
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate
+
+    - name: Install dependencies
+      run: composer update ${{ matrix.composer_flags }} --prefer-dist --no-interaction --no-suggest
+
+    - name: Run test suite
+      run: composer test

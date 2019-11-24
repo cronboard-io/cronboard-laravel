@@ -1,0 +1,175 @@
+<?php
+
+namespace Cronboard\Core;
+
+use Closure;
+use Cronboard\Core\Exceptions\Exception;
+use Cronboard\Tasks\Events\CallbackEvent;
+use Cronboard\Tasks\Events\Event;
+use Cronboard\Tasks\Task;
+use Cronboard\Tasks\TaskKey;
+use Illuminate\Console\Scheduling\Schedule as LaravelSchedule;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Collection;
+
+class Schedule extends LaravelSchedule
+{
+    protected $insideEventScope = false;
+
+    protected $cronboard;
+
+    public function __construct($timezone = null)
+    {
+        parent::__construct($timezone);
+        $container = Container::getInstance();
+        $this->cronboard = $container['cronboard'];
+    }
+
+	protected function passThroughEventProxy(string $method, array $arguments)
+	{
+        // we have an active event, which means we're in a nested call
+        // we fallback to the default logic
+        if ($this->insideEventScope) {
+            return parent::$method(...$arguments);
+        }
+
+        $this->insideEventScope = true;
+
+        $event = parent::$method(...$arguments);
+        // link event callbacks with cronboard
+        $event = $this->linkToCronboard($event);
+
+        // we close event scope when done with this event
+        $this->insideEventScope = false;
+
+        return $event;
+	}
+
+    protected function linkToCronboard($event)
+    {
+        // remove last event
+        array_pop($this->events);
+
+        // replace with augmented event
+        $this->events[] = $event = $event->linkToCronboard($this->cronboard);
+
+        return $event;
+    }
+
+    /**
+     * Get all of the events on the schedule that are due.
+     *
+     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @return \Illuminate\Support\Collection
+     */
+    public function dueEvents($app)
+    {
+        return Collection::wrap($this->events)->map(function($event){
+            $event->loadTaskFromCronboard();
+            return $event;
+        })->filter->isDue($app);
+    }
+
+    /**
+     * Add a new callback event to the schedule.
+     *
+     * @param  string|callable  $callback
+     * @param  array  $parameters
+     * @return \Illuminate\Console\Scheduling\CallbackEvent
+     */
+    public function call($callback, array $parameters = [])
+    {
+        $this->events[] = $event = new CallbackEvent(
+            $this->getScheduleEventMutex(), $callback, $parameters
+        );
+
+        if ($this->insideEventScope) {
+            return $event;
+        }
+
+        return $this->linkToCronboard($event);
+    	// return $this->passThroughEventProxy('call', func_get_args());
+    }
+
+    /**
+     * Add a new command event to the schedule.
+     *
+     * @param  string  $command
+     * @param  array  $parameters
+     * @return \Illuminate\Console\Scheduling\Event
+     */
+    public function exec($command, array $parameters = [])
+    {
+        if (count($parameters)) {
+            $command .= ' '.$this->compileParameters($parameters);
+        }
+
+        $this->events[] = $event = new Event($this->getScheduleEventMutex(), $command, $this->timezone ?? null);
+
+        if ($this->insideEventScope) {
+            return $event;
+        }
+
+        return $this->linkToCronboard($event);
+        // return $this->passThroughEventProxy('exec', func_get_args());
+    }
+
+    /**
+     * Get the event mutex
+     * @return \Illuminate\Console\Scheduling\Mutex|\Illuminate\Console\Scheduling\EventMutex the mutex
+     */
+    protected function getScheduleEventMutex()
+    {
+        return property_exists($this, 'eventMutex') ? $this->eventMutex : $this->mutex;
+    }
+
+    /**
+     * Add a new Artisan command event to the schedule.
+     *
+     * @param  string  $command
+     * @param  array  $parameters
+     * @return \Illuminate\Console\Scheduling\Event
+     */
+    public function command($command, array $parameters = [])
+    {
+    	return $this->passThroughEventProxy('command', func_get_args());
+    }
+
+    /**
+     * Add a new job callback event to the schedule.
+     *
+     * @param  object|string  $job
+     * @param  string|null  $queue
+     * @param  string|null  $connection
+     * @return \Illuminate\Console\Scheduling\CallbackEvent
+     */
+    public function job($job, $queue = null, $connection = null)
+    {
+        return $this->passThroughEventProxy('job', func_get_args())->setDelayedCallback(function($event) use ($job, $queue, $connection) {
+            $job = is_string($job) ? resolve($job) : $job;
+
+            if (method_exists($job, 'setTaskKey')) {
+                $task = $event->loadTaskFromCronboard();
+
+                if (! empty($task)) {
+                    // we need to enqueue a new task execution with the service
+                    // and link the job with that specific execution
+                    // this prevents the scenario where the task is invoked again
+                    // but the previous execution has not yet started
+                    $enqueuedExecutionKey = $this->cronboard->queue($task);
+                    $taskKey = $enqueuedExecutionKey ?: $task->getKey();
+                    $job->setTaskKey($taskKey);
+                }
+            }
+
+            if ($job instanceof ShouldQueue) {
+                dispatch($job)
+                    ->onConnection($connection ?? $job->connection)
+                    ->onQueue($queue ?? $job->queue);
+            } else {
+                dispatch_now($job);
+            }
+        });
+    }
+}

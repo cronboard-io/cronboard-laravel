@@ -1,0 +1,58 @@
+{
+    "name": "cronboard-io/cronboard-laravel",
+    "description": "Integration with Cronboard.io",
+    "keywords": [
+        "cronboard"
+    ],
+    "homepage": "https://github.com/cronboard-io/cronboard-laravel",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Stefan Kovachev",
+            "email": "stefan@cronboard.io",
+            "homepage": "https://cronboard.io",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "guzzlehttp/guzzle": "~6.0",
+        "illuminate/contracts": "~5.5.0 || ~5.6.0 || ~5.7.0 || ~5.8.0 || ^6.0",
+        "illuminate/support": "~5.5.0 || ~5.6.0 || ~5.7.0 || ~5.8.0 || ^6.0",
+        "phpoption/phpoption": "^1.5",
+        "vlucas/phpdotenv": "~2.2 || ~3.3 || ^3.6"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.14",
+        "orchestra/testbench": "^3.5 || ^3.6 || ^3.7 || ^3.8 || ^4.0",
+        "mockery/mockery": "^1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Cronboard\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Cronboard\\Tests\\": "tests"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Cronboard\\CronboardServiceProvider"
+            ]
+        }
+    }
+}

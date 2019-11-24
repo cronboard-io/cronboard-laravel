@@ -1,0 +1,88 @@
+<?php
+
+namespace Cronboard\Core\Concerns;
+
+use Cronboard\Console\InstallCommand;
+use Cronboard\Core\Api\Exception;
+use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Config\ConfigurationException;
+use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
+use Cronboard\Core\ExtendSnapshotWithRemoteTasks;
+
+trait Boot
+{
+    protected $config;
+
+    protected $booted = false;
+    protected $booting = false;
+    protected $offline = false;
+
+    public function ready(): bool
+    {
+        return $this->config->getEnabled() && $this->config->hasToken();
+    }
+
+    public function booted(): bool
+    {
+        return $this->booted;
+    }
+
+    public function boot()
+    {
+        if ($this->ready() && ! $this->booted() && ! $this->booting) {
+            $this->booting = true;
+
+            // load commands from local codebase
+            $snapshot = (new DiscoverCommandsAndTasks($this->app))->getSnapshot();
+
+            try {
+                if ($this->shouldContactRemote()) {
+                    $this->app->make(Configuration::class)->check();
+                    $snapshot = (new ExtendSnapshotWithRemoteTasks($this->app))->execute($snapshot);
+                }
+            } catch(ConfigurationException $exception) {
+                $this->reportException($exception);
+            }
+
+            $this->loadSnapshot($snapshot);
+
+            $this->loadCurrentTaskContextFromEnvironment();
+
+            $this->booting = false;
+            $this->booted = true;
+        }
+    }
+
+    private function shouldContactRemote(): bool
+    {
+        if ($this->app->runningInConsole()) {
+            $commandName = $_SERVER['argv'][1] ?? null;
+            $installationInProgress = $this->app->make(InstallCommand::class)->getName() === $commandName;
+            return ! $installationInProgress;
+        }
+        return true;
+    }
+
+    private function setOffline(bool $offline)
+    {
+        $this->offline = $offline;
+    }
+
+    protected function ensureHasBooted()
+    {
+        if (! $this->booted()) {
+            $this->boot();
+        }
+    }
+
+    public function isOffline(): bool
+    {
+        return $this->offline;
+    }
+
+    public function setOfflineDueTo(Exception $e)
+    {
+        $this->setOffline(true);
+        \Log::warning($e->getMessage());
+    }
+}

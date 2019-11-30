@@ -39,9 +39,12 @@ class FromScheduler
         return null;
     }
 
-    protected function createJobCommand(array $call): Command
+    protected function createJobCommand(array $call): ?Command
     {
-        return Command::job($call['args'][0]);
+        $argument = $call['args'][0] ?? null;
+        if (empty($argument)) return null;
+        $class = is_object($argument) ? get_class($argument) : $argument;
+        return Command::job($class);
     }
 
     protected function createConsoleCommand(array $call): Command

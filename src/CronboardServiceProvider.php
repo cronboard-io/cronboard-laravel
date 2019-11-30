@@ -17,6 +17,7 @@ use Cronboard\Core\Execution\Listeners\JobEventSubscriber;
 use Cronboard\Core\LoadRemoteTasksIntoSchedule;
 use Cronboard\Facades\Cronboard as CronboardFacade;
 use Cronboard\Runtime;
+use Cronboard\Support\FrameworkInformation;
 use Cronboard\Support\Signing\Verifier;
 use Cronboard\Tasks\Task;
 use Illuminate\Console\Scheduling\Schedule;
@@ -24,12 +25,15 @@ use Illuminate\Container\Container;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
 
 class CronboardServiceProvider extends ServiceProvider
 {
+    use FrameworkInformation;
+
     /**
      * Bootstrap the application services.
      */
@@ -96,6 +100,8 @@ class CronboardServiceProvider extends ServiceProvider
         $this->registerExceptionHandler($this->app);
 
         $this->registerScheduleExtension($this->app);
+
+        $this->registerCollectionExtensions($this->app);
     }
 
     /**
@@ -174,6 +180,13 @@ class CronboardServiceProvider extends ServiceProvider
         $this->app['events']->listen(MessageLogged::class, function(MessageLogged $event) {
             $this->app['cronboard']->handleExceptionEvent($event);
         });
+    }
+
+    public function registerCollectionExtensions(Container $app)
+    {
+        if ($this->getLaravelVersionAsDouble() <= 5.5) {
+            Collection::proxy('keyBy');
+        }
     }
 
     /**

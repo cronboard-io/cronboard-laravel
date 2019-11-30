@@ -62,7 +62,6 @@ trait TrackedEvent
     protected function notifyTaskStarting(Dispatcher $dispatcher)
     {
         $task = $this->loadTaskFromCronboard();
-        // dump('notifyTaskStarting' . (empty($task) ? 'missing' : 'found') . ' ' . getmypid());
         if ($task) {
             $dispatcher->dispatch(new TaskStarting($task));
         }

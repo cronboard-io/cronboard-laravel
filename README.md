@@ -1,9 +1,7 @@
 # Cronboard (for Laravel)
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/cronboard-io/cronboard-laravel.svg?style=flat-square)](https://packagist.org/packages/cronboard-io/cronboard-laravel)
-[![Build Status](https://img.shields.io/travis/cronboard-io/cronboard-laravel/master.svg?style=flat-square)](https://travis-ci.org/cronboard-io/cronboard-laravel)
-[![Quality Score](https://img.shields.io/scrutinizer/g/cronboard-io/cronboard-laravel.svg?style=flat-square)](https://scrutinizer-ci.com/g/cronboard-io/cronboard-laravel)
-[![Total Downloads](https://img.shields.io/packagist/dt/cronboard-io/cronboard-laravel.svg?style=flat-square)](https://packagist.org/packages/cronboard-io/cronboard-laravel)
+![Build Status](https://img.shields.io/github/workflow/status/cronboard-io/cronboard-laravel/Tests)
 
 ## Installation
 

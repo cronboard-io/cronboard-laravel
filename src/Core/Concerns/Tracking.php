@@ -9,7 +9,7 @@ use Illuminate\Console\Scheduling\Schedule as LaravelSchedule;
 
 trait Tracking
 {
-    public function extend(LaravelSchedule $schedule): LaravelSchedule
+    public function extend(LaravelSchedule $schedule, bool $reset = false): LaravelSchedule
     {
         if ($schedule instanceof Recorder) {
             return $schedule;
@@ -17,7 +17,7 @@ trait Tracking
 
         $this->ensureHasBooted();
 
-        return $this->getCronboardScheduleInstance();
+        return $this->getCronboardScheduleInstance($reset);
     }
 
     public function dontTrack(LaravelSchedule $schedule, Closure $scheduleGroup = null): LaravelSchedule
@@ -28,11 +28,11 @@ trait Tracking
         return $schedule;
     }
 
-    private function getCronboardScheduleInstance(): Schedule
+    private function getCronboardScheduleInstance(bool $reset = false): Schedule
     {
         static $instance = null;
 
-        if (empty($instance)) {
+        if (empty($instance) || $reset) {
             $instance = (new Schedule($this->getScheduleTimezone()));
             if (method_exists($instance, 'useCache')) {
                 return $instance->useCache($this->getScheduleCache());

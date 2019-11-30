@@ -2,6 +2,7 @@
 
 namespace Cronboard\Tasks\Events;
 
+use Cronboard\Tasks\Resolver;
 use Cronboard\Tasks\TaskKey;
 use Illuminate\Console\Scheduling\Event as SchedulingEvent;
 use Illuminate\Contracts\Container\Container;
@@ -44,7 +45,7 @@ class Event extends SchedulingEvent
     protected function getProcessEnvironment(): array
     {
         return [
-            'CRONBOARD_TASK' => $this->task ? $this->task->getKey() : TaskKey::createFromEvent($this)
+            Resolver::TASK_KEY_ENV_VAR => $this->task ? $this->task->getKey() : TaskKey::createFromEvent($this)
         ];
     }
 }

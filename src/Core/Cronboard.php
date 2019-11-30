@@ -45,6 +45,7 @@ class Cronboard
     {
         $this->commands = $snapshot->getCommands();
         $this->tasks = $snapshot->getTasks()->keyBy->getKey();
+        return $this;
     }
 
     public function updateToken(string $token)

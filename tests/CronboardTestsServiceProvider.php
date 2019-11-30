@@ -19,5 +19,6 @@ class CronboardTestsServiceProvider extends ServiceProvider
                 CronboardTestCommand::class
             ]);
         }
+        $this->loadMigrationsFrom(__DIR__ . '/Integration/migrations');
     }
 }

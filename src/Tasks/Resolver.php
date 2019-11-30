@@ -3,6 +3,7 @@
 namespace Cronboard\Tasks;
 
 use Cronboard\Core\Cronboard;
+use Cronboard\Support\Testing;
 use Cronboard\Tasks\Task;
 use Cronboard\Tasks\TaskKey;
 use Illuminate\Console\Scheduling\Event;
@@ -29,7 +30,20 @@ class Resolver
 
     public function resolveFromEnvironment(): ?Task
     {
-        $taskKey = $this->getTaskKeyEnvHelper() ?: ($this->getTaskKeyFromEnvArray() ?: $this->getTaskKeyFromServerArray());
+        $taskKey = $this->getTaskKeyEnvHelper();
+
+        if (! $taskKey) {
+            $taskKey = $this->getTaskKeyFromEnvArray();
+        }
+
+        if (! $taskKey) {
+            $taskKey = $this->getTaskKeyFromServerArray();
+        }
+
+        if (! $taskKey) {
+            $taskKey = $this->getTaskFromTestingEnvironment();
+        }
+
         return $this->getTask($taskKey);
     }
 
@@ -52,6 +66,11 @@ class Resolver
         return $_SERVER[static::TASK_KEY_ENV_VAR] ?? null;
     }
 
+    private function getTaskFromTestingEnvironment(): ?string
+    {
+        return Testing::getCurrentTask();
+    }
+
     public function resolveFromEvent(Event $event): ?Task
     {
         return $this->getTask(TaskKey::createFromEvent($event));
@@ -66,7 +85,6 @@ class Resolver
 
     protected function getTask(string $key = null)
     {
-        // dump('booted: ' . ($this->cronboard->booted() ? 'yes' : 'no'), $this->cronboard->getTasks()->map->getKey());
         if (empty($key)) return null;
         return $this->cronboard->getTaskByKey($key);
     }}

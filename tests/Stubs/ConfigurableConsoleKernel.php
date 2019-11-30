@@ -8,19 +8,19 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class ConfigurableConsoleKernel extends ConsoleKernel
 {
-    protected $callbacks = [];
+    protected static $callbacks = [];
 
     protected function schedule(Schedule $schedule)
     {
-        $schedule = Cronboard::extend($schedule);
+        $schedule = Cronboard::extend($schedule, $reset = true);
 
-        foreach ($this->callbacks as $callback) {
+        foreach (static::$callbacks as $callback) {
             $callback($schedule);
         }
     }
 
-    public function modifySchedule($callback)
+    public static function modifySchedule($callback)
     {
-        $this->callbacks[] = $callback;
+        static::$callbacks = [$callback];
     }
 }

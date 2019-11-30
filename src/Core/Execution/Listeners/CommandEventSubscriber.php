@@ -11,13 +11,21 @@ use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Console\Events\ScheduledTaskStarting;
+use ReflectionObject;
 
 class CommandEventSubscriber extends EventSubscriber
 {
     public function handleCommandStarting(CommandStarting $event)
     {
-        $this->cronboard->registerOutputStream($event->output);
+        $this->registerOutputStreamFromEvent($event);
         $this->startTask($this->getTaskFromEventAndVerify($event));
+    }
+
+    protected function registerOutputStreamFromEvent(CommandStarting $event)
+    {
+        if ((new ReflectionObject($event))->getProperty('output')->isPublic()) {
+            $this->cronboard->registerOutputStream($event->output);    
+        }
     }
 
     public function handleCommandFinished(CommandFinished $event)

@@ -29,7 +29,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_command_by_class_name()
     {
-        $this->kernel->modifySchedule(function($schedule){
+        ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->command(CronboardTestCommand::class, [3])->everyFiveMinutes();
         });
 
@@ -58,7 +58,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_command_by_alias()
     {
-        $this->kernel->modifySchedule(function($schedule){
+        ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->command("cb:test 3")->everyFiveMinutes();
         });
 
@@ -75,7 +75,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_command_by_alias_and_parameters()
     {
-        $this->kernel->modifySchedule(function($schedule){
+        ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->command("cb:test 3 --commandBooleanOption", [4])->everyFiveMinutes();
         });
 
@@ -107,7 +107,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_job_by_class_name()
     {
-        $this->kernel->modifySchedule(function($schedule){
+        ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->job(CronboardTestJob::class)->everyFiveMinutes();
         });
 
@@ -125,7 +125,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_callback()
     {
-    	$this->kernel->modifySchedule(function($schedule){
+    	ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->call(function () {
                 echo "Test";
             })->weekly();
@@ -145,7 +145,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_invokable_by_class_name()
     {
-        $this->kernel->modifySchedule(function($schedule){
+        ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->call(CronboardTestInvokable::class)->weekly()->mondays();
         });
 
@@ -168,7 +168,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_invokable_by_instance()
     {
-    	$this->kernel->modifySchedule(function($schedule){
+    	ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->call(new CronboardTestInvokable)->weekly()->mondays();
         });
 
@@ -186,7 +186,7 @@ class DiscoverTasksViaSchedulerTest extends TestCase
     /** @test */
     public function it_can_discover_exec()
     {
-    	$this->kernel->modifySchedule(function($schedule){
+    	ConfigurableConsoleKernel::modifySchedule(function($schedule){
             $schedule->exec('npm -v')->dailyAt(3);
         });
 

@@ -7,6 +7,7 @@ use Cronboard\Core\Api\Exception;
 use Cronboard\Core\Config\Configuration;
 use Cronboard\Core\Config\ConfigurationException;
 use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
+use Cronboard\Core\Discovery\Snapshot;
 use Cronboard\Core\ExtendSnapshotWithRemoteTasks;
 
 trait Boot
@@ -36,7 +37,7 @@ trait Boot
             $snapshot = (new DiscoverCommandsAndTasks($this->app))->getSnapshot();
 
             try {
-                if ($this->shouldContactRemote()) {
+                if ($this->shouldContactRemote($snapshot)) {
                     $this->app->make(Configuration::class)->check();
                     $snapshot = (new ExtendSnapshotWithRemoteTasks($this->app))->execute($snapshot);
                 }
@@ -53,14 +54,22 @@ trait Boot
         }
     }
 
-    private function shouldContactRemote(): bool
+    private function shouldContactRemote(Snapshot $snapshot): bool
     {
         if ($this->app->runningInConsole()) {
             $commandName = $_SERVER['argv'][1] ?? null;
-            $installationInProgress = $this->app->make(InstallCommand::class)->getName() === $commandName;
-            return ! $installationInProgress;
+            return ! empty($commandName) && $this->commandNeedsRemoteTasks($commandName, $snapshot);
         }
         return true;
+    }
+
+    private function commandNeedsRemoteTasks(string $commandName, Snapshot $snapshot): bool
+    {
+        $acceptedConsoleCommands = $snapshot->getCommands()->filter->isConsoleCommand()->map->getAlias();
+        $acceptedConsoleCommands = $acceptedConsoleCommands->merge([
+            'schedule:run', 'schedule:finish'
+        ]);
+        return $acceptedConsoleCommands->contains($commandName);
     }
 
     private function setOffline(bool $offline)

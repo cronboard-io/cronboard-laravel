@@ -63,6 +63,10 @@ class Endpoint
             $payload = json_decode($response->getBody() . '', true);
             $errorMessage = $payload['message'] ?? '';
 
+            if ($statusCode === 402) {
+                throw Exception::paymentRequired($e, $errorMessage);
+            }
+
             throw new Exception($statusCode, $errorMessage, $e);
         } catch (ConnectException $e) {
             throw Exception::offline($e);

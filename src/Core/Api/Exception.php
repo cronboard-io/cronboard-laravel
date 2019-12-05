@@ -32,6 +32,11 @@ class Exception extends CronboardException
         return (new static(503, 'No connection to Cronboard', $e))->setOffline(true);
     }
 
+    public static function paymentRequired(Throwable $e = null, string $errorMessage = null)
+    {
+        return (new static(402, $errorMessage ?: 'Payment required', $e));
+    }
+
     protected function setOffline(bool $offline)
     {
         $this->offline = $offline;

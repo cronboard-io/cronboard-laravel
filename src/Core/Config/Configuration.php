@@ -28,7 +28,7 @@ class Configuration
     	}
 
     	if (! $this->isTokenValid()) {
-    		throw new ConfigurationException(400, 'Your Cronboard.io token is not valid. Please verify you\'ve added the correct token in your .env file.', $lastApiException = $this->apiException);
+            throw ($this->apiException ?: new ConfigurationException(400, 'Your Cronboard.io token is not valid. Please verify you\'ve added the correct token in your .env file.'));
     	}
     }
 

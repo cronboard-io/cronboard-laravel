@@ -50,24 +50,24 @@ class CronboardServiceProvider extends ServiceProvider
                 StatusCommand::class,
                 InstallCommand::class
             ]);
+
+            Queue::before(function (JobProcessing $event) {
+                $this->app['cronboard']->boot();
+            });
+
+            $listeners = [
+                JobEventSubscriber::class,
+                CommandEventSubscriber::class,
+                CallableEventSubscriber::class,
+                ExecEventSubscriber::class,
+            ];
+
+            foreach ($listeners as $listener) {
+                Event::subscribe($this->app->make($listener));
+            }
+
+            $this->bootRemoteTasksIntoSchedule();
         }
-
-        Queue::before(function (JobProcessing $event) {
-            $this->app['cronboard']->boot();
-        });
-
-        $listeners = [
-            JobEventSubscriber::class,
-            CommandEventSubscriber::class,
-            CallableEventSubscriber::class,
-            ExecEventSubscriber::class,
-        ];
-
-        foreach ($listeners as $listener) {
-            Event::subscribe($this->app->make($listener));
-        }
-
-        $this->bootRemoteTasksIntoSchedule();
 
         // if cache has been cleared - make sure we refresh the snapshot
         Event::listen('cache:cleared', function () {
@@ -178,7 +178,9 @@ class CronboardServiceProvider extends ServiceProvider
     public function registerExceptionHandler(Container $app)
     {
         $this->app['events']->listen(MessageLogged::class, function(MessageLogged $event) {
-            $this->app['cronboard']->handleExceptionEvent($event);
+            if ($this->app['cronboard']->booted()) {
+                $this->app['cronboard']->handleExceptionEvent($event);
+            }
         });
     }
 

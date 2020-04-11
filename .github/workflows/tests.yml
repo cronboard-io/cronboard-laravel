@@ -13,6 +13,7 @@ jobs:
          - '"laravel/framework:5.7.*" "orchestra/testbench:3.7.*"'
          - '"laravel/framework:5.8.*" "orchestra/testbench:3.8.*"'
          - '"laravel/framework:6.*" "orchestra/testbench:4.*"'
+         - '"laravel/framework:7.*" "orchestra/testbench:5.*"'
 
         composer_flags: [--prefer-lowest, --prefer-stable]
 

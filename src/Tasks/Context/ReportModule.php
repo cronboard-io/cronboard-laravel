@@ -33,7 +33,12 @@ class ReportModule extends Module
 
 	public function report($key, $value)
     {
-        $this->report[$key] = $value;
+    	$supportedKey = is_string($key) || is_numeric($key);
+    	$supportedValue = is_scalar($value);
+    	
+    	if ($supportedKey && $supportedValue) {
+    		$this->report[$key] = $value;	
+    	}
     }
 
     public function getReport(): array

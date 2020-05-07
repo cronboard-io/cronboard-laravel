@@ -1,42 +1,57 @@
 name: Tests
 
+#on:
+#  push:
+#  schedule:
+#      - cron: '0 0 * * *'
+
 on: [push]
 
 jobs:
-  build:
+    php-tests:
+        runs-on: ${{ matrix.os }}
 
-    strategy:
-      matrix:
-        laravel:
-         - '"laravel/framework:5.5.*" "orchestra/testbench:3.5.*"'
-         - '"laravel/framework:5.6.*" "orchestra/testbench:3.6.*"'
-         - '"laravel/framework:5.7.*" "orchestra/testbench:3.7.*"'
-         - '"laravel/framework:5.8.*" "orchestra/testbench:3.8.*"'
-         - '"laravel/framework:6.*" "orchestra/testbench:4.*"'
-         - '"laravel/framework:7.*" "orchestra/testbench:5.*"'
+        strategy:
+            matrix:
+                php: [7.4, 7.3, 7.2, 7.1]
+                laravel: [7.*, 6.*, 5.8.*, 5.7.*, 5.6.*, 5.5.*]
+                dependency-version: [prefer-lowest, prefer-stable]
+                os: [ubuntu-latest] # os: [ubuntu-latest, windows-latest]
+                include:
+                    - laravel: 6.*
+                      testbench: 4.*
+                    - laravel: 5.8.*
+                      testbench: 3.8.*
+                    - laravel: 5.7.*
+                      testbench: 3.7.*
+                    - laravel: 5.6.*
+                      testbench: 3.6.*
+                    - laravel: 5.5.*
+                      testbench: 3.5.*
+                exclude:
+                    - laravel: 5.7.*
+                      php: 7.4
+                    - laravel: 5.6.*
+                      php: 7.4
+                    - laravel: 5.5.*
+                      php: 7.4
 
-        composer_flags: [--prefer-lowest, --prefer-stable]
+        name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }} - ${{ matrix.os }}
 
-        php: [7.1, 7.2, 7.3]
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v1
 
-    runs-on: ubuntu-latest
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v1
+              with:
+                  php-version: ${{ matrix.php }}
+                  extension-csv: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+                  coverage: none
 
-    steps:
-    - uses: actions/checkout@v1
-
-    # removed from "run"
-    # composer config discard-changes true
-    # composer self-update
-
-    - name: Prepare composer.json for test
-      run: |
-        composer require ${{ matrix.laravel }} --no-interaction --no-update
-
-    - name: Validate composer.json and composer.lock
-      run: composer validate
-
-    - name: Install dependencies
-      run: composer update ${{ matrix.composer_flags }} --prefer-dist --no-interaction --no-suggest
-
-    - name: Run test suite
-      run: composer test
+            - name: Install dependencies
+              run: |
+                  composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+                  composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
+            - name: Run test suite
+              run: composer test

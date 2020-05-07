@@ -16,10 +16,12 @@ class InvokableCommandScheduleTest extends ScheduleIntegrationTest
     protected function modifySchedule(Schedule $schedule): Schedule
     {
         $invokeParameters = [
-            'report' => 'this'
+            'report' => [
+                'report' => 'this'
+            ]
         ];
 
-        $schedule->call(new InvokableCommand, [$invokeParameters])->everyMinute();
+        $schedule->call(new InvokableCommand, $invokeParameters)->everyMinute();
 
         return $schedule;
     }

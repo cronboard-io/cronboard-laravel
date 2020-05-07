@@ -56,7 +56,7 @@ class Inspector
             $name = $reflectionParameter->getName();
 
             if (! empty($type)) {
-                $type = $type . '';
+                $type = $type->getName();
 
                 $parameter = null;
 

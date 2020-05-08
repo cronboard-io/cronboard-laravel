@@ -50,7 +50,7 @@ abstract class EventSubscriber
     protected function getTaskFromEvent($event): ?Task
     {
         $context = $this->cronboard->getContext();
-        if ($taskKey = $context->getTask()) {
+        if ($context && ($taskKey = $context->getTask())) {
             return $this->cronboard->getTaskByKey($taskKey);
         }
         return null;

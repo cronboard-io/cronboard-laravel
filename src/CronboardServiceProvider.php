@@ -62,6 +62,10 @@ class CronboardServiceProvider extends ServiceProvider
                 ExecEventSubscriber::class,
             ];
 
+            // $listeners = [
+            //     \Cronboard\Core\Execution\Listeners\DebugEventSubscriber::class
+            // ];
+
             foreach ($listeners as $listener) {
                 Event::subscribe($this->app->make($listener));
             }

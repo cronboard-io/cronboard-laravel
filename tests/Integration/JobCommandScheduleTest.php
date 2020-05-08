@@ -6,7 +6,6 @@ use Cronboard\Core\Api\Endpoints\Tasks;
 use Cronboard\Core\Cronboard;
 use Cronboard\Tests\Integration\Commands\JobCommand;
 use Cronboard\Tests\Integration\Commands\QueuedJobCommand;
-use Cronboard\Tests\Stubs\ConfigurableConsoleKernel;
 use Cronboard\Tests\TestCase;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel;

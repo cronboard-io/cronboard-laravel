@@ -5,7 +5,6 @@ namespace Cronboard\Tests\Integration;
 use Cronboard\Core\Api\Endpoints\Tasks;
 use Cronboard\Core\Cronboard;
 use Cronboard\Tests\Integration\Commands\InvokableCommand;
-use Cronboard\Tests\Stubs\ConfigurableConsoleKernel;
 use Cronboard\Tests\TestCase;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel;

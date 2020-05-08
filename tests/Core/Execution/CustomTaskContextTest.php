@@ -1,6 +1,6 @@
 <?php
 
-namespace Cronboard\Tests\Inspect;
+namespace Cronboard\Tests\Core\Execution;
 
 use Cronboard\Core\Execution\Context\ConfigurationSettingOverride;
 use Cronboard\Core\Execution\Context\EnvironmentVariableOverride;

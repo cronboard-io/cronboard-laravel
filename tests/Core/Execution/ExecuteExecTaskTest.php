@@ -1,6 +1,6 @@
 <?php
 
-namespace Cronboard\Tests\Inspect;
+namespace Cronboard\Tests\Core\Execution;
 
 use Cronboard\Commands\Builder;
 use Cronboard\Core\Execution\ExecuteExecTask;

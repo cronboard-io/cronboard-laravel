@@ -93,7 +93,16 @@ class Cronboard
     {
         if ($context = $this->getTrackedContextForTaskForRequest($task)) {
             $response = $this->app->make(Tasks::class)->start($task, $context);
-            return $response['success'] ?? false;
+            $success = $response['success'] ?? false;
+
+            if ($success) {
+                $key = $response['key'] ?? null;
+                if (! is_null($key)) {
+                    $this->switchToTaskInstance($task, $key);
+                }
+            }
+
+            return $success;
         }
         return false;
     }
@@ -107,7 +116,7 @@ class Cronboard
         return false;
     }
 
-    public function queue(Task $task)
+    public function queue(Task $task): ?Task
     {
         return $this->catchInternalExceptionsInCallback(function() use ($task) {
             if ($context = $this->getTrackedContextForTaskForRequest($task)) {
@@ -118,15 +127,13 @@ class Cronboard
                     // add queue task to current task list, so that it can be picked up if
                     // we're executing jobs using the sync driver
                     $queuedTask = $task->aliasAsCustomTask($responseKey);
-                    $this->tasks[$responseKey] = $queuedTask;
 
-                    // switch context to the queue task as it may start execution immediately
-                    $this->setTaskContext($queuedTask);
+                    return $this->switchToTaskInstance($task, $responseKey, $queuedTask);
                 }
 
-                return $responseKey;
+                return $task;
             }
-            return false;
+            return null;
         });
     }
 
@@ -139,6 +146,26 @@ class Cronboard
             }
             return false;
         });
+    }
+
+    private function switchToTaskInstance(Task $originalTask, string $key, Task $taskInstance = null): Task
+    {
+        if ($originalTask->getKey() !== $key) {
+            if (is_null($taskInstance)) {
+                $taskInstance = $originalTask->aliasAsTaskInstance($key);
+            }
+
+            if (! $this->tasks->has($key)) {
+                $this->tasks[$key] = $taskInstance;
+            }
+        }
+
+        $taskInstance = $taskInstance ?: $originalTask;
+
+        // switch context to the queue task as it may start execution immediately
+        $this->setTaskContext($taskInstance);
+
+        return $taskInstance;
     }
 
     private function catchInternalExceptionsInCallback(Closure $callback)

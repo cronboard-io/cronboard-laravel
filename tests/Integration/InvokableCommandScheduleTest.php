@@ -46,6 +46,9 @@ class InvokableCommandScheduleTest extends ScheduleIntegrationTest
         $this->assertEquals(1, $cronboard->getTasks()->count());
         $task = $cronboard->getTasks()->first();
 
+        // task queued
+        $this->assertTaskEvent('queue', $task);
+
         // task started
         $this->assertTaskEvent('start', $task);
 

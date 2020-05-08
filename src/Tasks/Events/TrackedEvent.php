@@ -62,8 +62,13 @@ trait TrackedEvent
     protected function notifyTaskStarting(Dispatcher $dispatcher)
     {
         $task = $this->loadTaskFromCronboard();
-        if ($task) {
-            $dispatcher->dispatch(new TaskStarting($task));
+
+        // get resolved task instance on set it on event
+        $taskInstance = $this->cronboard->queue($task);
+        $this->setTask($taskInstance);
+
+        if ($taskInstance) {
+            $dispatcher->dispatch(new TaskStarting($taskInstance));
         }
     }
 
@@ -146,13 +151,16 @@ trait TrackedEvent
     {
         $task = $this->cronboard->getTaskForEvent($this);
         $taskContext = $this->getCronboard()->setTaskContext($task);
+        $output = $this->cronboard->getOutput();
 
-        if ($output = $this->cronboard->getOutput()) {
-            if (($taskContext && ! $taskContext->isActive())) {
+        if (($taskContext && ! $taskContext->isActive())) {
+            if ($output) {
                 $output->disabled('Scheduled command is disabled and will not run: ' . $this->getSummaryForDisplay());
-                return false;
             }
+            return false;
+        }
 
+        if ($output) {
             if (empty($taskContext)) {
                 $output->silent('Scheduled command is not supported or has not been recorded, and will not report to Cronboard: ' . $this->getSummaryForDisplay());
                 $output->comment('Please run `cronboard:record` if you haven\'t or use a unique `name()` or `description()` to facilitate integration with Cronboard.');

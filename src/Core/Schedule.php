@@ -89,7 +89,6 @@ class Schedule extends LaravelSchedule
         }
 
         return $this->linkToCronboard($event);
-    	// return $this->passThroughEventProxy('call', func_get_args());
     }
 
     /**
@@ -112,7 +111,6 @@ class Schedule extends LaravelSchedule
         }
 
         return $this->linkToCronboard($event);
-        // return $this->passThroughEventProxy('exec', func_get_args());
     }
 
     /**
@@ -149,19 +147,7 @@ class Schedule extends LaravelSchedule
         return $this->passThroughEventProxy('job', func_get_args())->setDelayedCallback(function($event) use ($job, $queue, $connection) {
             $job = is_string($job) ? resolve($job) : $job;
 
-            if (method_exists($job, 'setTaskKey')) {
-                $task = $event->loadTaskFromCronboard();
-
-                if (! empty($task)) {
-                    // we need to enqueue a new task execution with the service
-                    // and link the job with that specific execution
-                    // this prevents the scenario where the task is invoked again
-                    // but the previous execution has not yet started
-                    $enqueuedExecutionKey = $this->cronboard->queue($task);
-                    $taskKey = $enqueuedExecutionKey ?: $task->getKey();
-                    $job->setTaskKey($taskKey);
-                }
-            }
+            $job = $this->attachTaskToJob($job, $event);
 
             if ($job instanceof ShouldQueue) {
                 dispatch($job)
@@ -171,5 +157,18 @@ class Schedule extends LaravelSchedule
                 dispatch_now($job);
             }
         });
+    }
+
+    private function attachTaskToJob($job, $event)
+    {
+        if (method_exists($job, 'setTaskKey')) {
+            $task = $event->loadTaskFromCronboard();
+
+            if (! empty($task)) {
+                $job->setTaskKey($task->getKey());
+            }
+        }
+
+        return $job;
     }
 }

@@ -87,4 +87,5 @@ class Resolver
     {
         if (empty($key)) return null;
         return $this->cronboard->getTaskByKey($key);
-    }}
+    }
+}

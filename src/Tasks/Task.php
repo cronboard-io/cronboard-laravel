@@ -93,9 +93,18 @@ class Task
 
     public function aliasAsCustomTask(string $key)
     {
-        return tap(clone $this, function($instance) use ($key) {
+        return $this->aliasAsTaskInstance($key, [
+            'custom' => true
+        ]);
+    }
+
+    public function aliasAsTaskInstance(string $key, array $attributes = [])
+    {
+        return tap(clone $this, function($instance) use ($key, $attributes) {
             $instance->key = $key;
-            $instance->custom = true;
+            foreach ($attributes as $attribute => $value) {
+                $instance->$attribute = $value;
+            }
             return $instance;
         });
     }

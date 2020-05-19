@@ -4,6 +4,7 @@ namespace Cronboard\Tests\Integration;
 
 use Cronboard\Core\Api\Endpoints\Tasks;
 use Cronboard\Core\Cronboard;
+use Cronboard\Tasks\Events\CallbackEvent;
 use Cronboard\Tests\Integration\Commands\JobCommand;
 use Cronboard\Tests\Integration\Commands\QueuedJobCommand;
 use Cronboard\Tests\TestCase;
@@ -33,7 +34,7 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
     public function it_makes_task_lifecycle_requests_when_task_executes_in_sync()
     {
         // get events
-        $events = $this->schedule->dueEvents($this->app);
+        $events = $this->getSchedule()->dueEvents($this->app);
 
         // make sure tasks are loaded in Cronboard
         $this->loadTasksIntoCronboard();
@@ -41,6 +42,8 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
 
         $this->assertEquals(2, $events->count());
         $this->assertEquals(2, $cronboard->getTasks()->count());
+
+        $this->assertInstanceOf(CallbackEvent::class, $events[0]);
 
         $syncTask = $cronboard->getTasks()->values()[0];
         $this->assertTaskEvent('queue', $syncTask);
@@ -55,13 +58,15 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
     /** @test */
     public function it_makes_task_queue_requests_when_task_executes_in_queue()
     {
-        $events = $this->schedule->dueEvents($this->app);
+        $events = $this->getSchedule()->dueEvents($this->app);
 
         $this->loadTasksIntoCronboard();
         $cronboard = $this->app->make(Cronboard::class);
 
         $this->assertEquals(2, $events->count());
         $this->assertEquals(2, $cronboard->getTasks()->count());
+
+        $this->assertInstanceOf(CallbackEvent::class, $events[1]);
 
         $queueTask = $cronboard->getTasks()->values()[1];
         $this->assertTaskEvent('queue', $queueTask);
@@ -76,7 +81,7 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
     /** @test */
     public function it_makes_task_lifecycle_requests_when_task_executes_is_processed()
     {
-        $events = $this->schedule->dueEvents($this->app);
+        $events = $this->getSchedule()->dueEvents($this->app);
 
         $this->loadTasksIntoCronboard();
         $cronboard = $this->app->make(Cronboard::class);

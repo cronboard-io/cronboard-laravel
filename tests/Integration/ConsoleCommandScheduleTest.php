@@ -4,6 +4,7 @@ namespace Cronboard\Tests\Integration;
 
 use Cronboard\Core\Cronboard;
 use Cronboard\Support\Testing;
+use Cronboard\Tasks\Events\Event;
 use Cronboard\Tasks\Resolver;
 use Cronboard\Tests\Integration\Commands\ConsoleCommand;
 use Cronboard\Tests\Integration\ScheduleIntegrationTest;
@@ -25,8 +26,10 @@ class ConsoleCommandScheduleTest extends ScheduleIntegrationTest
     /** @test */
     public function it_makes_task_lifecycle_requests_when_command_events_are_fired_by_scheduler()
     {
-        $events = $this->schedule->dueEvents($this->app);
+        $events = $this->getSchedule()->dueEvents($this->app);
         $this->assertEquals(1, $events->count());
+        $commandEvent = $events[0];
+        $this->assertInstanceOf(Event::class, $commandEvent);
 
         // make sure tasks are loaded in Cronboard
         $this->loadTasksIntoCronboard();

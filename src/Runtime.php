@@ -45,7 +45,6 @@ class Runtime
     private function getRuntimeMethods(): array
     {
         return [
-            'extend',
             'dontTrack',
         ];
     }

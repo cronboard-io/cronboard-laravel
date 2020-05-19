@@ -8,6 +8,7 @@ use Cronboard\Console\RecordCommand;
 use Cronboard\Console\StatusCommand;
 use Cronboard\Core\Api\Client;
 use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Connector;
 use Cronboard\Core\Cronboard;
 use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
 use Cronboard\Core\Execution\Listeners\CallableEventSubscriber;
@@ -22,6 +23,7 @@ use Cronboard\Support\Signing\Verifier;
 use Cronboard\Tasks\Task;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Queue\Events\JobProcessing;
@@ -70,7 +72,7 @@ class CronboardServiceProvider extends ServiceProvider
                 Event::subscribe($this->app->make($listener));
             }
 
-            $this->bootRemoteTasksIntoSchedule();
+            $this->hookIntoContainer();
         }
 
         // if cache has been cleared - make sure we refresh the snapshot
@@ -79,11 +81,26 @@ class CronboardServiceProvider extends ServiceProvider
         });
     }
 
-    protected function bootRemoteTasksIntoSchedule()
+    protected function hookIntoContainer()
     {
         $this->app->resolving(Schedule::class, function ($schedule) {
             (new LoadRemoteTasksIntoSchedule($this->app))->execute($schedule);
         });
+
+        if ($this->getLaravelVersionAsInteger() < 5520) {
+            // Laravel 5.5
+            // force console kernel to add booting callback
+            $this->app->make(Kernel::class);
+
+            // add rebinding callback for schedule
+            $this->app->booted(function ($app) {
+                $bindings = $app->getBindings();
+                $isBoundAsInstance = ! array_key_exists(Schedule::class, $bindings) && $app->isShared(Schedule::class);
+                if ($isBoundAsInstance) {
+                    $app->instance(Schedule::class, $this->connectCronboardSchedule($app[Schedule::class]));
+                }
+            });
+        }
     }
 
     /**
@@ -101,23 +118,11 @@ class CronboardServiceProvider extends ServiceProvider
 
         $this->registerCronboard($this->app);
 
+        $this->registerCronboardConnector($this->app);
+
         $this->registerExceptionHandler($this->app);
 
-        $this->registerScheduleExtension($this->app);
-
         $this->registerCollectionExtensions($this->app);
-    }
-
-    /**
-     * Register schedule extensions
-     * @param  Container $app
-     * @return void
-     */
-    public function registerScheduleExtension(Container $app)
-    {
-        $app->extend(Schedule::class, function ($laravelSchedule) {
-            return $this->app['cronboard']->extend($laravelSchedule);
-        });
     }
 
     /**
@@ -129,6 +134,8 @@ class CronboardServiceProvider extends ServiceProvider
     {
         $configuration = new Configuration($app, $app->config['cronboard']);
         $app->instance(Configuration::class, $configuration);
+
+        return $this;
     }
 
     /**
@@ -175,6 +182,21 @@ class CronboardServiceProvider extends ServiceProvider
     }
 
     /**
+     * Register connector
+     * @param  Container $app
+     * @return void
+     */
+    public function registerCronboardConnector(Container $app)
+    {
+        $app->instance('cronboard.connector', $connector = $app->make(Connector::class));
+
+        // connect when schedule bound as singleton
+        $app->extend(Schedule::class, function ($schedule) {
+            return $this->connectCronboardSchedule($schedule);
+        });
+    }
+
+    /**
      * Register Cronboard as an exception handler
      * @param  Container $app
      * @return void
@@ -193,6 +215,11 @@ class CronboardServiceProvider extends ServiceProvider
         if ($this->getLaravelVersionAsDouble() <= 5.5) {
             Collection::proxy('keyBy');
         }
+    }
+
+    protected function connectCronboardSchedule(Schedule $schedule)
+    {
+        return $this->app['cronboard.connector']->connect($schedule);
     }
 
     /**

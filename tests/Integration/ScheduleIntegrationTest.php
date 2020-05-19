@@ -28,10 +28,13 @@ abstract class ScheduleIntegrationTest extends TestCase
         parent::setUp();
 
         $this->tasks = $this->app->instance(Tasks::class, $tasks = m::mock(Tasks::class));
+    }
 
-        // force schedule resolution to make sure ConfigurableConsoleKernel custom logic is ran
-        // in Laravel 6+ bootstrapping is delayed until first resolution
-        $this->app->make(Schedule::class);
+    protected function getSchedule()
+    {
+        return $this->app['cronboard.connector']->reconnect(
+            $this->app->make(Schedule::class)
+        );
     }
 
     protected function loadTasksIntoCronboard()

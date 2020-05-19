@@ -4,6 +4,7 @@ namespace Cronboard\Tests\Integration;
 
 use Cronboard\Core\Api\Endpoints\Tasks;
 use Cronboard\Core\Cronboard;
+use Cronboard\Tasks\Events\CallbackEvent;
 use Cronboard\Tests\Integration\Commands\InvokableCommand;
 use Cronboard\Tests\TestCase;
 use Illuminate\Console\Scheduling\Schedule;
@@ -35,13 +36,16 @@ class InvokableCommandScheduleTest extends ScheduleIntegrationTest
         }
 
         // get events
-        $events = $this->schedule->dueEvents($this->app);
+        $events = $this->getSchedule()->dueEvents($this->app);
 
         // make sure tasks are loaded in Cronboard
         $this->loadTasksIntoCronboard();
         $cronboard = $this->app->make(Cronboard::class);
 
         $this->assertEquals(1, $events->count());
+        $invokableEvent = $events[0];
+        $this->assertInstanceOf(CallbackEvent::class, $invokableEvent);
+
         $this->assertEquals(1, $cronboard->getTasks()->count());
         $task = $cronboard->getTasks()->first();
 
@@ -61,6 +65,6 @@ class InvokableCommandScheduleTest extends ScheduleIntegrationTest
         
         $this->tasks->allows('fail');
 
-        $events[0]->run($this->app);
+        $invokableEvent->run($this->app);
     }
 }

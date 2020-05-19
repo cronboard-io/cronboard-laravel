@@ -3,11 +3,12 @@
 namespace Cronboard\Core\Discovery\Schedule;
 
 use Closure;
+use Cronboard\Core\Connectable;
 use Cronboard\Core\Schedule;
 use Illuminate\Console\Scheduling\Schedule as LaravelSchedule;
 use Illuminate\Support\Collection;
 
-class Recorder extends LaravelSchedule
+class Recorder extends LaravelSchedule implements Connectable
 {
 	protected $schedule;
 	protected $eventRecorders;
@@ -63,7 +64,7 @@ class Recorder extends LaravelSchedule
         return $this->record('exec', func_get_args());
     }
 
-    public function extend(LaravelSchedule $schedule): LaravelSchedule
+    public function connect(LaravelSchedule $schedule, bool $unplug = false): LaravelSchedule
     {
         return $this;
     }

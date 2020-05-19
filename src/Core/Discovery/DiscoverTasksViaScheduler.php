@@ -49,10 +49,9 @@ class DiscoverTasksViaScheduler
 
     public function getTasks(): Collection
     {
-        // swap facade root with recorder
+        // swap connectable with recorder
         $this->recorder = $recorder = new Recorder;
-        $cronboardFacadeRoot = Cronboard::getFacadeRoot();
-        Cronboard::swap($recorder);
+        $this->app['cronboard.connector']->swapTemporary($this->recorder);
 
         $this->invokeKernelSchedule();
 
@@ -71,8 +70,8 @@ class DiscoverTasksViaScheduler
             return $task->getKey();
         });
 
-        // swap back facade root
-        Cronboard::swap($cronboardFacadeRoot);
+        // swap back to original connectable
+        $this->app['cronboard.connector']->restore();
 
         return $tasks;
     }
@@ -81,7 +80,7 @@ class DiscoverTasksViaScheduler
     {
         $scheduleMethod = (new ReflectionClass($this->kernel))->getMethod('schedule');
         $scheduleMethod->setAccessible(true);
-        $scheduleMethod->invoke($this->kernel, new Schedule);
+        $scheduleMethod->invoke($this->kernel, $this->recorder);
     }
 
     protected function getConsoleCommandByAlias(CommandByAlias $alias): ?string

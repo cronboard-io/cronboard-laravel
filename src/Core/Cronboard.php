@@ -19,7 +19,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Closure;
 
-class Cronboard
+class Cronboard implements Connectable
 {
     use Concerns\Boot;
     use Concerns\Context;

@@ -12,8 +12,6 @@ class ConfigurableConsoleKernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
-        $schedule = Cronboard::extend($schedule, $reset = true);
-
         foreach (static::$callbacks as $callback) {
             $callback($schedule);
         }

@@ -6,18 +6,34 @@ use Closure;
 use Cronboard\Core\Discovery\Schedule\Recorder;
 use Cronboard\Core\Schedule;
 use Illuminate\Console\Scheduling\Schedule as LaravelSchedule;
+use Illuminate\Contracts\Console\Kernel;
+use ReflectionClass;
 
 trait Tracking
 {
-    public function extend(LaravelSchedule $schedule, bool $reset = false): LaravelSchedule
+    public function connect(LaravelSchedule $schedule, bool $unplug = false): LaravelSchedule
     {
         if ($schedule instanceof Recorder) {
             return $schedule;
         }
 
+        $eventsLoaded = false;
+        $isDefaultSchedule = get_class($schedule) === LaravelSchedule::class;
+
+        if ($isDefaultSchedule || $unplug) {
+            $eventsLoaded = ! empty($schedule->events());
+        }
+
         $this->ensureHasBooted();
 
-        return $this->getCronboardScheduleInstance($reset);
+        $instance = $this->getCronboardScheduleInstance($unplug);
+        $cronboardEventsLoaded = ! empty($instance->events());
+
+        if ($eventsLoaded && ! $cronboardEventsLoaded) {
+            $this->loadEventsInSchedule($instance);
+        }
+
+        return $instance;
     }
 
     public function dontTrack(LaravelSchedule $schedule, Closure $scheduleGroup = null): LaravelSchedule
@@ -26,6 +42,14 @@ trait Tracking
             $scheduleGroup($schedule);
         }
         return $schedule;
+    }
+
+    private function loadEventsInSchedule(Schedule $schedule)
+    {
+        $consoleKernel = $this->app->make(Kernel::class);
+        $scheduleMethod = (new ReflectionClass($consoleKernel))->getMethod('schedule');
+        $scheduleMethod->setAccessible(true);
+        $scheduleMethod->invoke($consoleKernel, $schedule);
     }
 
     private function getCronboardScheduleInstance(bool $reset = false): Schedule

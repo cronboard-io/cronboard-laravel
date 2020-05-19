@@ -4,7 +4,7 @@ namespace Cronboard\Core;
 
 use Cronboard\Facades\Cronboard as CronboardFacade;
 use Cronboard\Runtime;
-use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Console\Scheduling\Schedule as LaravelSchedule;
 
 class Connector
 {
@@ -18,12 +18,12 @@ class Connector
         $this->cronboardRuntime = $runtime;
     }
 
-    public function connect(Schedule $schedule): Schedule
+    public function connect(LaravelSchedule $schedule): LaravelSchedule
     {
         return $this->getHandler()->connect($schedule);
     }
 
-    public function reconnect(Schedule $schedule): Schedule
+    public function reconnect(LaravelSchedule $schedule): LaravelSchedule
     {
         return $this->getHandler()->connect($schedule, true);
     }

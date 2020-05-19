@@ -11,6 +11,8 @@ use ReflectionClass;
 
 trait Tracking
 {
+    abstract protected function ensureHasBooted();
+    
     public function connect(LaravelSchedule $schedule, bool $unplug = false): LaravelSchedule
     {
         if ($schedule instanceof Recorder) {

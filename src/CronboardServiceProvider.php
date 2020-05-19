@@ -43,7 +43,7 @@ class CronboardServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/cronboard.php' => config_path('cronboard.php'),
+                __DIR__ . '/../config/cronboard.php' => config_path('cronboard.php'),
             ], 'config');
 
             $this->commands([
@@ -53,7 +53,7 @@ class CronboardServiceProvider extends ServiceProvider
                 InstallCommand::class
             ]);
 
-            Queue::before(function (JobProcessing $event) {
+            Queue::before(function(JobProcessing $event) {
                 $this->app['cronboard']->boot();
             });
 
@@ -76,14 +76,14 @@ class CronboardServiceProvider extends ServiceProvider
         }
 
         // if cache has been cleared - make sure we refresh the snapshot
-        Event::listen('cache:cleared', function () {
+        Event::listen('cache:cleared', function() {
             (new DiscoverCommandsAndTasks($this->app))->getNewSnapshotAndStore();
         });
     }
 
     protected function hookIntoContainer()
     {
-        $this->app->resolving(Schedule::class, function ($schedule) {
+        $this->app->resolving(Schedule::class, function($schedule) {
             (new LoadRemoteTasksIntoSchedule($this->app))->execute($schedule);
         });
 
@@ -93,9 +93,9 @@ class CronboardServiceProvider extends ServiceProvider
             $this->app->make(Kernel::class);
 
             // add rebinding callback for schedule
-            $this->app->booted(function ($app) {
+            $this->app->booted(function($app) {
                 $bindings = $app->getBindings();
-                $isBoundAsInstance = ! array_key_exists(Schedule::class, $bindings) && $app->isShared(Schedule::class);
+                $isBoundAsInstance = !array_key_exists(Schedule::class, $bindings) && $app->isShared(Schedule::class);
                 if ($isBoundAsInstance) {
                     $app->instance(Schedule::class, $this->connectCronboardSchedule($app[Schedule::class]));
                 }
@@ -108,7 +108,7 @@ class CronboardServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/cronboard.php', 'cronboard');
+        $this->mergeConfigFrom(__DIR__ . '/../config/cronboard.php', 'cronboard');
 
         $this->registerConfiguration($this->app);
 
@@ -173,7 +173,7 @@ class CronboardServiceProvider extends ServiceProvider
         $app->instance('cronboard', $cronboard);
         $app->alias('cronboard', Cronboard::class);
 
-        $app->bind('cronboard.runtime', function($app){
+        $app->bind('cronboard.runtime', function($app) {
             return $app->make(Runtime::class);
         });
 
@@ -191,7 +191,7 @@ class CronboardServiceProvider extends ServiceProvider
         $app->instance('cronboard.connector', $connector = $app->make(Connector::class));
 
         // connect when schedule bound as singleton
-        $app->extend(Schedule::class, function ($schedule) {
+        $app->extend(Schedule::class, function($schedule) {
             return $this->connectCronboardSchedule($schedule);
         });
     }

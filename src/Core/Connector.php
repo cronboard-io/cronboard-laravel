@@ -8,19 +8,19 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class Connector
 {
-	protected $cronboard;
+    protected $cronboard;
     protected $cronboardRuntime;
-	protected $connectable;
+    protected $connectable;
 
-	public function __construct(Cronboard $cronboard, Runtime $runtime)
-	{
-		$this->cronboard = $cronboard;
+    public function __construct(Cronboard $cronboard, Runtime $runtime)
+    {
+        $this->cronboard = $cronboard;
         $this->cronboardRuntime = $runtime;
-	}
+    }
 
     public function connect(Schedule $schedule): Schedule
     {
-    	return $this->getHandler()->connect($schedule);
+        return $this->getHandler()->connect($schedule);
     }
 
     public function reconnect(Schedule $schedule): Schedule
@@ -30,13 +30,13 @@ class Connector
 
     public function swapTemporary(Connectable $connectable)
     {
-    	$this->connectable = $connectable;
+        $this->connectable = $connectable;
         $this->refresh();
     }
 
     public function restore()
     {
-    	$this->connectable = null;
+        $this->connectable = null;
         $this->refresh();
     }
 

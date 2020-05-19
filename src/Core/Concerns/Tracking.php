@@ -21,15 +21,15 @@ trait Tracking
         $isDefaultSchedule = get_class($schedule) === LaravelSchedule::class;
 
         if ($isDefaultSchedule || $unplug) {
-            $eventsLoaded = ! empty($schedule->events());
+            $eventsLoaded = !empty($schedule->events());
         }
 
         $this->ensureHasBooted();
 
         $instance = $this->getCronboardScheduleInstance($unplug);
-        $cronboardEventsLoaded = ! empty($instance->events());
+        $cronboardEventsLoaded = !empty($instance->events());
 
-        if ($eventsLoaded && ! $cronboardEventsLoaded) {
+        if ($eventsLoaded && !$cronboardEventsLoaded) {
             $this->loadEventsInSchedule($instance);
         }
 
@@ -38,7 +38,7 @@ trait Tracking
 
     public function dontTrack(LaravelSchedule $schedule, Closure $scheduleGroup = null): LaravelSchedule
     {
-        if (! is_null($scheduleGroup)) {
+        if (!is_null($scheduleGroup)) {
             $scheduleGroup($schedule);
         }
         return $schedule;

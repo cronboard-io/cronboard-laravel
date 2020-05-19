@@ -10,24 +10,24 @@ use Illuminate\Support\Collection;
 
 class Recorder extends LaravelSchedule implements Connectable
 {
-	protected $schedule;
-	protected $eventRecorders;
+    protected $schedule;
+    protected $eventRecorders;
 
-	public function __construct()
-	{
-		$this->schedule = new Schedule;
-		$this->eventRecorders = new Collection;
-	}
+    public function __construct()
+    {
+        $this->schedule = new Schedule;
+        $this->eventRecorders = new Collection;
+    }
 
     public function getEventData(): Collection
     {
-    	return $this->eventRecorders->map(function($eventRecorder) {
-    		return [
-    			'event' => $eventRecorder->getRecordedEvent(),
+        return $this->eventRecorders->map(function($eventRecorder) {
+            return [
+                'event' => $eventRecorder->getRecordedEvent(),
                 'eventData' => $eventRecorder->getRecordedEventData(),
-    			'constraints' => $eventRecorder->getRecordedConstraints()
-    		];
-    	});
+                'constraints' => $eventRecorder->getRecordedConstraints()
+            ];
+        });
     }
 
     public function getEventRecorders(): Collection
@@ -37,11 +37,11 @@ class Recorder extends LaravelSchedule implements Connectable
 
     protected function record($method, $args)
     {
-    	$event = call_user_func_array([$this->schedule, $method], $args);
+        $event = call_user_func_array([$this->schedule, $method], $args);
         $eventData = compact('method', 'args');
-    	return tap(new EventRecorder($event, $eventData), function($eventRecorder) {
-    		$this->eventRecorders[] = $eventRecorder;
-    	});
+        return tap(new EventRecorder($event, $eventData), function($eventRecorder) {
+            $this->eventRecorders[] = $eventRecorder;
+        });
     }
 
     public function call($callback, array $parameters = [])

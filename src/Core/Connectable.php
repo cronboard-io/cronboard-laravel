@@ -6,5 +6,5 @@ use Illuminate\Console\Scheduling\Schedule;
 
 interface Connectable
 {
-	public function connect(Schedule $schedule, bool $unplug = false): Schedule;
+    public function connect(Schedule $schedule, bool $unplug = false): Schedule;
 }

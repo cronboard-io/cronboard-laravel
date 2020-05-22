@@ -17,7 +17,7 @@ class Collector implements Arrayable
 
     public function getKey(): string
     {
-        if (! empty($this->collectors)) {
+        if (! $this->collectors->isEmpty()) {
             return 'compound';
         }
         $shortName = (new ReflectionClass($this))->getShortName();
@@ -36,6 +36,9 @@ class Collector implements Arrayable
 
     public function toArray(): array
     {
-        return $this->collectors->keyBy->getKey()->toArray();
+        return $this->collectors
+            ->keyBy->getKey()
+            ->map->toArray()
+            ->toArray();
     }
 }

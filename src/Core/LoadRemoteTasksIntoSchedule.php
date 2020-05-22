@@ -46,7 +46,7 @@ class LoadRemoteTasksIntoSchedule
             return $schedule;
         }
 
-        $customTasks = $this->cronboard->getTasks()->filter->isCustomTask();
+        $customTasks = $this->cronboard->getTasks()->filter->isCronboardTask();
 
         foreach ($customTasks as $customTask) {
             $event = $this->addTaskToSchedule($schedule, $customTask);
@@ -58,9 +58,7 @@ class LoadRemoteTasksIntoSchedule
     protected function addTaskToSchedule(Schedule $schedule, Task $task)
     {
         $event = $this->addEventFromTask($schedule, $task);
-        if (! empty($event)) {
-
-            // link with task
+        if (!is_null($event)) {
             $event = $event->setTask($task);
 
             // apply constraints
@@ -70,9 +68,8 @@ class LoadRemoteTasksIntoSchedule
             }
 
             $event->description($task->getDetail('name'));
-
-            return $event;
         }
+        return $event;
     }
 
     protected function addEventFromTask(Schedule $schedule, Task $task)

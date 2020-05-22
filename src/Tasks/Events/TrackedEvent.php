@@ -63,12 +63,14 @@ trait TrackedEvent
     {
         $task = $this->loadTaskFromCronboard();
 
-        // get resolved task instance on set it on event
-        $taskInstance = $this->cronboard->queue($task);
-        $this->setTask($taskInstance);
+        if ($task) {
+            // get resolved task instance on set it on event
+            $task = $this->cronboard->queue($task);
+            $this->setTask($task);
+        }
 
-        if ($taskInstance) {
-            $dispatcher->dispatch(new TaskStarting($taskInstance));
+        if ($task) {
+            $dispatcher->dispatch(new TaskStarting($task));
         }
     }
 

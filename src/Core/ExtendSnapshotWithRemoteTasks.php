@@ -104,7 +104,7 @@ class ExtendSnapshotWithRemoteTasks
     protected function shouldStoreSnapshot(Snapshot $snapshot)
     {
         return ! empty($customScheduledTask = $snapshot->getTasks()->first(function($task){
-            return $task->isCustomTask() && ! $task->isSingleExecution();
+            return $task->isCronboardTask() && !$task->isSingleExecution();
         }));
     }
 
@@ -129,10 +129,6 @@ class ExtendSnapshotWithRemoteTasks
     protected function createTasksFromPayload(Collection $tasksPayload, Snapshot $snapshot): Collection
     {
         $tasks = Collection::wrap($tasksPayload)
-            // filter to only custom tasks
-            ->filter(function($taskData){
-                return $this->isDefinedByCronboard($taskData);
-            })
             // create task objects
             ->map(function($taskData, $taskKey) use ($snapshot) {
                 return $this->createTaskFromPayload($taskData, $snapshot);
@@ -157,7 +153,7 @@ class ExtendSnapshotWithRemoteTasks
         $task = new Task($taskData['key'], $command, $parameters, $taskData['constraints']);
         $task->setDetails(Arr::only($taskData, 'name'));
 
-        $task->setCustomTask(true);
+        $task->setCronboardTask(true);
         $task->setSingleExecution($taskData['once']);
 
         return $task;

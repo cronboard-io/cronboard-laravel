@@ -46,12 +46,12 @@ class Task
         $this->details = $details;
     }
 
-    public function setCustomTask(bool $custom)
+    public function setCronboardTask(bool $custom)
     {
         $this->custom = $custom;
     }
 
-    public function isCustomTask(): bool
+    public function isCronboardTask(): bool
     {
         return $this->custom;
     }
@@ -59,6 +59,11 @@ class Task
     public function setSingleExecution(bool $singleExecution)
     {
         $this->singleExecution = $singleExecution;
+    }
+
+    public function isApplicationTask(): bool
+    {
+        return !$this->isCronboardTask();
     }
 
     public function isSingleExecution(): bool

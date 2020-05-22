@@ -19,11 +19,17 @@ class Schedule extends LaravelSchedule
 
     protected $cronboard;
 
+    protected $loadedTasks;
+    protected $ready;
+
     public function __construct($timezone = null)
     {
         parent::__construct($timezone);
         $container = Container::getInstance();
+
         $this->cronboard = $container['cronboard'];
+        $this->loadedTasks = [];
+        $this->ready = false;
     }
 
 	protected function passThroughEventProxy(string $method, array $arguments)
@@ -51,10 +57,34 @@ class Schedule extends LaravelSchedule
         // remove last event
         array_pop($this->events);
 
-        // replace with augmented event
+        // wrap with lifecycle events
         $this->events[] = $event = $event->linkToCronboard($this->cronboard);
 
         return $event;
+    }
+
+    protected function prepare()
+    {
+        if (!$this->ready && !empty($this->events)) {
+            $eventsWithTasks = Collection::wrap($this->events)->map(function($event){
+                $event->loadTaskFromCronboard();
+                return $event;
+            });
+
+            $events = [];
+            foreach ($this->events as $event) {
+                $task = $event->loadTaskFromCronboard();
+                if (empty($task) || !in_array($taskKey = $task->getKey(), $this->loadedTasks)) {
+                    $events[] = $event;
+                    if ($task) {
+                        $this->loadedTasks[] = $taskKey;
+                    }
+                }
+            }
+            $this->events = $events;
+
+            $this->ready = true;
+        }
     }
 
     /**
@@ -65,10 +95,19 @@ class Schedule extends LaravelSchedule
      */
     public function dueEvents($app)
     {
-        return Collection::wrap($this->events)->map(function($event){
-            $event->loadTaskFromCronboard();
-            return $event;
-        })->filter->isDue($app);
+        $this->prepare();
+        return parent::dueEvents($app);
+    }
+
+    /**
+     * Get all of the events on the schedule.
+     *
+     * @return \Illuminate\Console\Scheduling\Event[]
+     */
+    public function events()
+    {
+        $this->prepare();
+        return parent::events();
     }
 
     /**

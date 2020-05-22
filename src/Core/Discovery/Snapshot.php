@@ -36,7 +36,7 @@ class Snapshot
                 if (empty($resolvedCommand)) {
                     throw new CommandNotFoundException($taskCommand);
                 }
-                
+
                 $task->setCommand($resolvedCommand);
                 return $task;
             }
@@ -104,7 +104,7 @@ class Snapshot
 
         // remove expired / complete remote tasks from the snapshot
         $this->tasks = $this->tasks->merge($remoteTasks)->filter(function($task) use ($remoteTaskKeys) {
-            return ! $task->isCustomTask() || $remoteTaskKeys->contains($task->getKey());
+            return ! $task->isCronboardTask() || $remoteTaskKeys->contains($task->getKey());
         });
     }
 }

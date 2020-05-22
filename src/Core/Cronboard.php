@@ -41,6 +41,11 @@ class Cronboard implements Connectable
         $this->exceptionListeners = new Collection;
 	}
 
+    public function loadConfiguration(Configuration $config)
+    {
+        $this->config = $config;
+    }
+
     public function loadSnapshot(Snapshot $snapshot)
     {
         $this->commands = $snapshot->getCommands();

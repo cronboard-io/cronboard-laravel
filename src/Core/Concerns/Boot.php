@@ -28,7 +28,7 @@ trait Boot
         return $this->booted;
     }
 
-    public function boot()
+    public function boot(): bool
     {
         if ($this->ready() && ! $this->booted() && ! $this->booting) {
             $this->booting = true;
@@ -51,7 +51,11 @@ trait Boot
 
             $this->booting = false;
             $this->booted = true;
+
+            return true;
         }
+
+        return false;
     }
 
     private function shouldContactRemote(Snapshot $snapshot): bool
@@ -77,11 +81,12 @@ trait Boot
         $this->offline = $offline;
     }
 
-    protected function ensureHasBooted()
+    protected function ensureHasBooted(): bool
     {
         if (! $this->booted()) {
-            $this->boot();
+            return $this->boot();
         }
+        return true;
     }
 
     public function isOffline(): bool

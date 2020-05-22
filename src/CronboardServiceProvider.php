@@ -77,7 +77,9 @@ class CronboardServiceProvider extends ServiceProvider
 
         // if cache has been cleared - make sure we refresh the snapshot
         Event::listen('cache:cleared', function() {
-            (new DiscoverCommandsAndTasks($this->app))->getNewSnapshotAndStore();
+            if ($this->isCronboardActive()) {
+                (new DiscoverCommandsAndTasks($this->app))->getNewSnapshotAndStore();
+            }
         });
     }
 
@@ -94,10 +96,11 @@ class CronboardServiceProvider extends ServiceProvider
 
             // add rebinding callback for schedule
             $this->app->booted(function($app) {
-                $bindings = $app->getBindings();
-                $isBoundAsInstance = !array_key_exists(Schedule::class, $bindings) && $app->isShared(Schedule::class);
-                if ($isBoundAsInstance) {
-                    $app->instance(Schedule::class, $this->connectCronboardSchedule($app[Schedule::class]));
+                if ($this->isCronboardActive()) {
+                    $isBoundAsInstance = !array_key_exists(Schedule::class, $app->getBindings()) && $app->isShared(Schedule::class);
+                    if ($isBoundAsInstance) {
+                        $app->instance(Schedule::class, $this->connectCronboardSchedule($app[Schedule::class]));
+                    }
                 }
             });
         }
@@ -204,7 +207,7 @@ class CronboardServiceProvider extends ServiceProvider
     public function registerExceptionHandler(Container $app)
     {
         $this->app['events']->listen(MessageLogged::class, function(MessageLogged $event) {
-            if ($this->app['cronboard']->booted()) {
+            if ($this->isCronboardActive()) {
                 $this->app['cronboard']->handleExceptionEvent($event);
             }
         });
@@ -220,6 +223,11 @@ class CronboardServiceProvider extends ServiceProvider
     protected function connectCronboardSchedule(Schedule $schedule)
     {
         return $this->app['cronboard.connector']->connect($schedule);
+    }
+
+    protected function isCronboardActive(): bool
+    {
+        return $this->app['cronboard']->booted();
     }
 
     /**

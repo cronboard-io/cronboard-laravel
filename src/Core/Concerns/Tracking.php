@@ -11,11 +11,15 @@ use ReflectionClass;
 
 trait Tracking
 {
-    abstract protected function ensureHasBooted();
-    
+    abstract protected function ensureHasBooted(): bool;
+
     public function connect(LaravelSchedule $schedule, bool $unplug = false): LaravelSchedule
     {
         if ($schedule instanceof Recorder) {
+            return $schedule;
+        }
+
+        if (!$this->ensureHasBooted()) {
             return $schedule;
         }
 
@@ -25,8 +29,6 @@ trait Tracking
         if ($isDefaultSchedule || $unplug) {
             $eventsLoaded = !empty($schedule->events());
         }
-
-        $this->ensureHasBooted();
 
         $instance = $this->getCronboardScheduleInstance($unplug);
         $cronboardEventsLoaded = !empty($instance->events());

@@ -8,54 +8,54 @@ use Illuminate\Support\Collection;
 
 class OverridesModule extends Module
 {
-	protected $overrides;
-	protected $container;
+    protected $overrides;
+    protected $container;
 
-	public function __construct(Container $container)
-	{
-		$this->container = $container;
-	}
+    public function __construct(Container $container)
+    {
+        $this->container = $container;
+    }
 
-	public function load(array $data)
-	{
-		$value = $data['overrides'] ?? null;
-		if ($value) {
-			$value = $this->formatValueFromStorage($value);
-		}
-		$this->overrides = $value ?: new Collection;
-	}
+    public function load(array $data)
+    {
+        $value = $data['overrides'] ?? null;
+        if ($value) {
+            $value = $this->formatValueFromStorage($value);
+        }
+        $this->overrides = $value ?: new Collection;
+    }
 
-	public function toArray(): array
-	{
-		return [
-			'overrides' => $this->overrides->toArray()
-		];
-	}
+    public function toArray(): array
+    {
+        return [
+            'overrides' => $this->overrides->toArray()
+        ];
+    }
 
-	public function getHooks(): array
-	{
-		return [
-			'setOverrides',
-			'getExecutionContext'
-		];
-	}
+    public function getHooks(): array
+    {
+        return [
+            'setOverrides',
+            'getExecutionContext'
+        ];
+    }
 
-	public function shouldStoreAfter(string $hookName): bool
-	{
-		return $hookName === 'setOverrides';
-	}
+    public function shouldStoreAfter(string $hookName): bool
+    {
+        return $hookName === 'setOverrides';
+    }
 
-	public function onContextEnter()
-	{
-		$this->executeContextOverrides();
-	}
+    public function onContextEnter()
+    {
+        $this->executeContextOverrides();
+    }
 
-	public function onContextExit()
-	{
-		$this->rollbackContextOverrides();
-	}
+    public function onContextExit()
+    {
+        $this->rollbackContextOverrides();
+    }
 
-	public function setOverrides(array $overrides = [])
+    public function setOverrides(array $overrides = [])
     {
         $this->overrides = $this->formatValueFromStorage($overrides);
     }
@@ -65,7 +65,7 @@ class OverridesModule extends Module
         return $this->overrides;
     }
 
-	private function formatValueFromStorage($value)
+    private function formatValueFromStorage($value)
     {
         return (new ParseContext)->execute($value);
     }

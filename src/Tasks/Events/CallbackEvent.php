@@ -25,7 +25,7 @@ class CallbackEvent extends SchedulingCallbackEvent
         parent::description($description);
 
         // need to refresh task since its key depends on the callback event description
-        if (! empty($this->cronboard)) {
+        if (!empty($this->cronboard)) {
             $task = $this->cronboard->getTaskForEvent($this);
             $this->setTask($task);
         }
@@ -49,8 +49,8 @@ class CallbackEvent extends SchedulingCallbackEvent
      */
     public function run(Container $container)
     {
-        if (! empty($this->delayedCallback)) {
-            $this->callback = function () {
+        if (!empty($this->delayedCallback)) {
+            $this->callback = function() {
                 $callback = $this->delayedCallback;
                 $callback($this);
             };
@@ -65,7 +65,7 @@ class CallbackEvent extends SchedulingCallbackEvent
             $this->cronboard->failWithException($e);
             throw $e;
         } finally {
-            if (! $executionFailed) {
+            if (!$executionFailed) {
                 $this->notifyTaskFinished($container->make(Dispatcher::class));
             }
         }

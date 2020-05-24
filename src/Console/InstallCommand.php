@@ -47,8 +47,8 @@ class InstallCommand extends Command
         $response = $this->laravel->make(Cronboard::class)->install($token, $environmentData);
 
         if ($response['success'] ?? false) {
-            $tokenArgumentIsDifferentFromConfig = $tokenAsArgument && (! $tokenFromConfig || $tokenFromConfig !== $tokenAsArgument);
-            $tokenExistsInConfigButNotInEnvFile = $tokenFromConfig && ! $this->environmentVariableExists();
+            $tokenArgumentIsDifferentFromConfig = $tokenAsArgument && (!$tokenFromConfig || $tokenFromConfig !== $tokenAsArgument);
+            $tokenExistsInConfigButNotInEnvFile = $tokenFromConfig && !$this->environmentVariableExists();
             $tokenIsBeingUpdated = $tokenArgumentIsDifferentFromConfig || $tokenExistsInConfigButNotInEnvFile;
 
             if ($tokenIsBeingUpdated) {
@@ -64,7 +64,7 @@ class InstallCommand extends Command
 
             $this->info($response['message'] ?: 'Installation completed.');
 
-            if (! $shouldAskToRefreshCache) {
+            if (!$shouldAskToRefreshCache) {
                 $this->call('cronboard:status');
             } else {
                 $this->warn('Your configuration is cached - please run `php artisan config:cache` to make sure Cronboard\'s configuration is included.');
@@ -95,7 +95,7 @@ class InstallCommand extends Command
         $variables = $dotenv->safeLoad();
         $value = $variables[static::CRONBOARD_TOKEN_KEY] ?? null;
         
-        return ! empty($value);
+        return !empty($value);
     }
 
     private function setTokenInEnvironmentFile($token)
@@ -112,7 +112,7 @@ class InstallCommand extends Command
     private function replaceTokenInEnvFile($token)
     {
         $this->modifyEnvFileContents(function($contents) use ($token) {
-            return preg_replace('/'.static::CRONBOARD_TOKEN_KEY.'=.*/', $this->getTokenLine($token), $contents);
+            return preg_replace('/' . static::CRONBOARD_TOKEN_KEY . '=.*/', $this->getTokenLine($token), $contents);
         });
     }
 

@@ -6,44 +6,44 @@ use Illuminate\Contracts\Container\Container;
 
 class ArrayParameter extends Parameter
 {
-	protected $name;
-	protected $value;
-	protected $associative;
+    protected $name;
+    protected $value;
+    protected $associative;
 
-	public function __construct(string $name, $value = null)
-	{
-		$this->name = $name;
-		$this->value = $value;
-		$this->associative = true;
-	}
+    public function __construct(string $name, $value = null)
+    {
+        $this->name = $name;
+        $this->value = $value;
+        $this->associative = true;
+    }
 
-	public function getName(): string
-	{
-		return $this->name;
-	}
+    public function getName(): string
+    {
+        return $this->name;
+    }
 
-	public function getValue()
-	{
-		return $this->value;
-	}
+    public function getValue()
+    {
+        return $this->value;
+    }
 
-	public function getType(): string
-	{
-		return 'array';
-	}
+    public function getType(): string
+    {
+        return 'array';
+    }
 
-	public function isAssociative(): bool
-	{
-		return $this->associative;
-	}
+    public function isAssociative(): bool
+    {
+        return $this->associative;
+    }
 
-	public function setAssociative(bool $associative): self
-	{
-		$this->associative = $associative;
-		return $this;
-	}
+    public function setAssociative(bool $associative): self
+    {
+        $this->associative = $associative;
+        return $this;
+    }
 
-	public function toArray()
+    public function toArray()
     {
         return parent::toArray() + ['associative' => (int) $this->isAssociative()];
     }

@@ -55,7 +55,7 @@ class DiscoverTasksViaScheduler
 
         $this->invokeKernelSchedule();
 
-        $tasks = $recorder->getEventData()->map(function($data){
+        $tasks = $recorder->getEventData()->map(function($data) {
             $event = $data['event'];
             $eventData = $data['eventData'];
             $constraints = $data['constraints'];
@@ -66,7 +66,7 @@ class DiscoverTasksViaScheduler
                 $task = $this->createTaskFromCommand($command, $scheduleArguments, $constraints, $event, $eventData);
             }
             return $task ?? null;
-        })->filter()->keyBy(function($task){
+        })->filter()->keyBy(function($task) {
             return $task->getKey();
         });
 
@@ -117,7 +117,7 @@ class DiscoverTasksViaScheduler
 
     protected function createTaskFromCommand(Command $command, array $scheduleArguments, array $constraints, Event $event, array $eventData): Task
     {
-        $constraints = Collection::wrap($constraints)->map(function($constraint){
+        $constraints = Collection::wrap($constraints)->map(function($constraint) {
             return [$constraint['method'], $constraint['args']];
         })->toArray();
 
@@ -134,12 +134,12 @@ class DiscoverTasksViaScheduler
         }
 
         if ($command->isConsoleCommand()) {
-            $isCalledByCommandAlias = ! class_exists($callHandler);
+            $isCalledByCommandAlias = !class_exists($callHandler);
             if ($isCalledByCommandAlias) {
                 $callArguments = $this->extractCallArgumentsFromCommandAlias($command, $callHandler, $callArguments);
             }
 
-            if (! empty($callArguments)) {
+            if (!empty($callArguments)) {
                 $taskParameters->fillParameterGroupValuesByOrder(Parameters::GROUP_CONSOLE, $callArguments);
             }
         }
@@ -154,7 +154,7 @@ class DiscoverTasksViaScheduler
 
     protected function extractCallArgumentsFromCommandAlias(Command $command, string $handler, array $passedArguments = []): array
     {
-        if (! empty($passedArguments)) {
+        if (!empty($passedArguments)) {
             $handler .= ' ' . $this->recorder->compileConsoleParameters($passedArguments);
         }
 

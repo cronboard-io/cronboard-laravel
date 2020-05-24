@@ -30,7 +30,7 @@ trait Boot
 
     public function boot(): bool
     {
-        if ($this->ready() && ! $this->booted() && ! $this->booting) {
+        if ($this->ready() && !$this->booted() && !$this->booting) {
             $this->booting = true;
 
             // load commands from local codebase
@@ -41,7 +41,7 @@ trait Boot
                     $this->app->make(Configuration::class)->check();
                     $snapshot = (new ExtendSnapshotWithRemoteTasks($this->app))->execute($snapshot);
                 }
-            } catch(ConfigurationException $exception) {
+            } catch (ConfigurationException $exception) {
                 $this->reportException($exception);
             }
 
@@ -62,7 +62,7 @@ trait Boot
     {
         if ($this->app->runningInConsole()) {
             $commandName = $_SERVER['argv'][1] ?? null;
-            return ! empty($commandName) && $this->commandNeedsRemoteTasks($commandName, $snapshot);
+            return !empty($commandName) && $this->commandNeedsRemoteTasks($commandName, $snapshot);
         }
         return true;
     }
@@ -83,7 +83,7 @@ trait Boot
 
     protected function ensureHasBooted(): bool
     {
-        if (! $this->booted()) {
+        if (!$this->booted()) {
             return $this->boot();
         }
         return true;

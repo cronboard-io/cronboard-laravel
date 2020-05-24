@@ -30,16 +30,16 @@ class Cronboard implements Connectable
     protected $tasks;
     protected $commands;
 
-	public function __construct(Container $app, Configuration $config)
-	{
+    public function __construct(Container $app, Configuration $config)
+    {
         $this->app = $app;
-		$this->config = $config;
+        $this->config = $config;
 
         $this->commands = new Collection;
         $this->tasks = new Collection;
 
         $this->exceptionListeners = new Collection;
-	}
+    }
 
     public function loadConfiguration(Configuration $config)
     {
@@ -102,7 +102,7 @@ class Cronboard implements Connectable
 
             if ($success) {
                 $key = $response['key'] ?? null;
-                if (! is_null($key)) {
+                if (!is_null($key)) {
                     $this->switchToTaskInstance($task, $key);
                 }
             }
@@ -160,7 +160,7 @@ class Cronboard implements Connectable
                 $taskInstance = $originalTask->aliasAsTaskInstance($key);
             }
 
-            if (! $this->tasks->has($key)) {
+            if (!$this->tasks->has($key)) {
                 $this->tasks[$key] = $taskInstance;
             }
         }

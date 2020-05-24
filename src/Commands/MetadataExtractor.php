@@ -40,7 +40,7 @@ class MetadataExtractor
 
         if ($object instanceof Command) {
             $result = $this->getMetadataFromClass($object->getHandler());
-            if (! empty($result)) {
+            if (!empty($result)) {
                 extract($result);
             }
         } else if ($object instanceof ConsoleCommand) {

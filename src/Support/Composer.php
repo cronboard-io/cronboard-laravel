@@ -17,14 +17,14 @@ class Composer
 
         $basePath = Str::before($composerJsonPath, 'composer.json');
 
-        return array_map(function (string $path) use ($basePath) {
-            return realpath($basePath.$path);
+        return array_map(function(string $path) use ($basePath) {
+            return realpath($basePath . $path);
         }, $paths);
     }
 
     public static function getComposerContents($composerJsonPath): array
     {
-        if (! file_exists($composerJsonPath)) {
+        if (!file_exists($composerJsonPath)) {
             return [];
         }
 

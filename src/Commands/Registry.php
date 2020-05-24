@@ -32,8 +32,8 @@ class Registry
 
     protected function refreshIndex()
     {
-        $this->commands = $this->commands->filter(function($command){
-            return ! $command->isConsoleCommand() || $this->isAcceptedConsoleCommand($command);
+        $this->commands = $this->commands->filter(function($command) {
+            return !$command->isConsoleCommand() || $this->isAcceptedConsoleCommand($command);
         })->keyBy->getKey()->values();
     }
 

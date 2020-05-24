@@ -8,7 +8,7 @@ class GroupedParameters extends Parameters
 {
     public function __construct($items = [])
     {
-        $this->items = Collection::wrap($items)->map(function($parameters, $group){
+        $this->items = Collection::wrap($items)->map(function($parameters, $group) {
             return Parameters::wrap($parameters);
         });
     }
@@ -27,7 +27,9 @@ class GroupedParameters extends Parameters
 
     public function fillParameterGroupValuesByOrder(string $group, array $values)
     {
-        if (empty($values)) return $this;
+        if (empty($values)) {
+            return $this;
+        }
 
         $this->insideParameterGroup($group, function($parameters, $group) use ($values) {
             $this->items[$group] = $parameters->fillParameterValuesByOrder($values);
@@ -48,7 +50,9 @@ class GroupedParameters extends Parameters
 
     public function fillParameterValues(array $values, bool $byKey = true)
     {
-        if (empty($values)) return $this;
+        if (empty($values)) {
+            return $this;
+        }
 
         $this->forEachParameterGroup(function($group, $parameters) use ($values) {
             $this->fillParameterGroupValues($group, $values);
@@ -59,7 +63,9 @@ class GroupedParameters extends Parameters
 
     public function fillParameterGroupValues(string $group, array $values)
     {
-        if (empty($values)) return $this;
+        if (empty($values)) {
+            return $this;
+        }
 
         $this->insideParameterGroup($group, function($parameters) use ($values) {
             $providedParameters = array_keys($values);
@@ -81,7 +87,7 @@ class GroupedParameters extends Parameters
     protected function forEachParameterGroup(callable $callback)
     {
         foreach ($this->items as $group => $parameters) {
-           $callback($group, $parameters);
+            $callback($group, $parameters);
         }
     }
 }

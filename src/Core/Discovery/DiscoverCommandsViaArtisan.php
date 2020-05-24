@@ -43,9 +43,9 @@ final class DiscoverCommandsViaArtisan
         $builder = new Builder($this->container);
 
         return Collection::wrap($this->consoleKernel->all())
-            ->map(function (Command $command) use ($builder) {
+            ->map(function(Command $command) use ($builder) {
                 $className = get_class($command);
-                if ($this->shouldIgnoreExactClass($className) || ! $this->isClassNamespaceAllowed($className)) {
+                if ($this->shouldIgnoreExactClass($className) || !$this->isClassNamespaceAllowed($className)) {
                     return null;
                 }
                 return $builder->fromObject($command);
@@ -65,13 +65,17 @@ final class DiscoverCommandsViaArtisan
 
     protected function isClassInRestrictedNamespaces(string $className): bool
     {
-        if (empty($this->restrictToNamespaces)) return true;
+        if (empty($this->restrictToNamespaces)) {
+            return true;
+        }
         return Str::startsWith($className, $this->restrictToNamespaces);
     }
 
     protected function isClassNamespaceExcluded(string $className): bool
     {
-        if (empty($this->excludeNamespaces)) return false;
+        if (empty($this->excludeNamespaces)) {
+            return false;
+        }
         return Str::startsWith($className, $this->excludeNamespaces);
     }
 }

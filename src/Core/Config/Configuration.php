@@ -11,7 +11,7 @@ class ConfigurationException extends Exception {}
 
 class Configuration
 {
-	protected $app;
+    protected $app;
     protected $config;
     protected $apiException;
 
@@ -23,13 +23,13 @@ class Configuration
 
     public function check()
     {
-    	if (! $this->hasToken()) {
-    		throw new ConfigurationException(400, 'No Cronboard.io token found. Try setting \'CRONBOARD_TOKEN\' in your .env file first.');
-    	}
+        if (! $this->hasToken()) {
+            throw new ConfigurationException(400, 'No Cronboard.io token found. Try setting \'CRONBOARD_TOKEN\' in your .env file first.');
+        }
 
-    	if (! $this->isTokenValid()) {
+        if (! $this->isTokenValid()) {
             throw ($this->apiException ?: new ConfigurationException(400, 'Your Cronboard.io token is not valid. Please verify you\'ve added the correct token in your .env file.'));
-    	}
+        }
     }
 
     public function getBaseUrl(): string
@@ -85,7 +85,7 @@ class Configuration
 
     public function hasToken(): bool
     {
-        return ! empty($this->getToken());
+        return !empty($this->getToken());
     }
 
     public function isTokenValid(): bool

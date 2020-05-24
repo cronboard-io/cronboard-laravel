@@ -8,7 +8,7 @@ trait ValidatesCronboardConfiguration
 {
     protected function validateCronboardConfiguration(): bool
     {
-    	$configuration = $this->laravel->make(Configuration::class);
+        $configuration = $this->laravel->make(Configuration::class);
         if (! $configuration->hasToken()) {
             $this->error('No Cronboard.io token found. Try running \'cronboard:install\' first.');
             return false;

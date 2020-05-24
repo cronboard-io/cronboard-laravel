@@ -9,21 +9,21 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class ExecuteCommandTask extends ExecuteTask
 {
-	public function attach(Schedule $schedule)
-	{
-		$command = $this->task->getCommand();
+    public function attach(Schedule $schedule)
+    {
+        $command = $this->task->getCommand();
 
-		$commandLineParameters = $this->getCommandLineParameters();
+        $commandLineParameters = $this->getCommandLineParameters();
 
-		return $schedule->command($command->getHandler(), $commandLineParameters);
-	}
+        return $schedule->command($command->getHandler(), $commandLineParameters);
+    }
 
-	public function getCommandLineParameters(): array
-	{
-		$taskParameters = $this->getTaskParameters();
+    public function getCommandLineParameters(): array
+    {
+        $taskParameters = $this->getTaskParameters();
 
-		$consoleParameters = $taskParameters->getGroupParameters(Parameters::GROUP_CONSOLE)->toCollection();
+        $consoleParameters = $taskParameters->getGroupParameters(Parameters::GROUP_CONSOLE)->toCollection();
 
-		return $this->extractConsoleParameterValues($consoleParameters);
-	}
+        return $this->extractConsoleParameterValues($consoleParameters);
+    }
 }

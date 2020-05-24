@@ -4,10 +4,10 @@ namespace Cronboard\Support;
 
 trait FrameworkInformation
 {
-	protected function getLaravelApplication()
-	{
-		return $this->app;
-	}
+    protected function getLaravelApplication()
+    {
+        return $this->app;
+    }
 
     public function getLaravelVersionAsDouble()
     {

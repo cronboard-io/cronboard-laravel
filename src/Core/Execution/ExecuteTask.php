@@ -13,24 +13,24 @@ use Illuminate\Support\Collection;
 
 abstract class ExecuteTask
 {
-	protected $task;
-	protected $app;
+    protected $task;
+    protected $app;
 
-	public function __construct(Task $task, Container $app)
-	{
-		$this->task = $task;
-		$this->app = $app;
-	}
+    public function __construct(Task $task, Container $app)
+    {
+        $this->task = $task;
+        $this->app = $app;
+    }
 
-	public static function create(): ExecuteTask
-	{
-		return new static(...func_get_args());
-	}
+    public static function create(): ExecuteTask
+    {
+        return new static(...func_get_args());
+    }
 
-	public function attach(Schedule $schedule)
-	{
-		return $schedule->call($this);
-	}
+    public function attach(Schedule $schedule)
+    {
+        return $schedule->call($this);
+    }
 
     protected function extractConsoleParameterValues(Collection $parameters): array
     {
@@ -42,7 +42,7 @@ abstract class ExecuteTask
             return $parameter instanceof OptionParameter;
         });
 
-        $commandLineParameters = array_merge($arguments->map(function($argument){
+        $commandLineParameters = array_merge($arguments->map(function($argument) {
             return $this->formatArgumentParameter($argument);
         })->toArray(), $options->map(function($option) {
             return $this->formatOptionParameter($option);
@@ -71,7 +71,7 @@ abstract class ExecuteTask
             }
         } else {
             $parameterValue = $this->getParameterValueOrEmpty($parameter);
-            if (! empty($parameterValue)) {
+            if (!empty($parameterValue)) {
                 return implode('', ['--', $parameter->getName(), '=', $parameterValue]);
             }
         }
@@ -80,9 +80,9 @@ abstract class ExecuteTask
 
     protected function extractParameterValues(Collection $parameters): array
     {
-        return $parameters->keyBy(function($parameter){
+        return $parameters->keyBy(function($parameter) {
             return $parameter->getName();
-        })->map(function($parameter){
+        })->map(function($parameter) {
             return $this->getParameterValue($parameter);
         })->all();
     }
@@ -100,7 +100,7 @@ abstract class ExecuteTask
             }
         ];
 
-        if (! $allowEmpty) {
+        if (!$allowEmpty) {
             $sources = array_merge($sources, [
                 function() use ($parameter) {
                     return $parameter->getDefault();
@@ -113,7 +113,7 @@ abstract class ExecuteTask
 
         foreach ($sources as $callback) {
             $value = $callback();
-            if (! is_null($value)) {
+            if (!is_null($value)) {
                 return $value;
             }
         }

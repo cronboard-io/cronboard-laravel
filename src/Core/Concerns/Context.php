@@ -24,7 +24,7 @@ trait Context
 
     public function setTaskContext(Task $task = null): ?TaskContext
     {
-        if (! empty($task)) {
+        if (!empty($task)) {
             return $this->context = TaskContext::fromTask($this->app, $task);
         }
         return $this->context = null;
@@ -33,7 +33,7 @@ trait Context
     public function setTaskContextWhenTracked(Task $task = null): ?TaskContext
     {
         if ($context = $this->setTaskContext($task)) {
-            if (! $context->isTracked()) {
+            if (!$context->isTracked()) {
                 $context->exit();
                 $this->setTaskContext($context = null);
             }

@@ -58,7 +58,7 @@ class PreviewCommand extends Command
 
     protected function getTaskConstraintsOutput(Task $task)
     {
-        return Collection::wrap($task->getConstraints())->map(function($entry){
+        return Collection::wrap($task->getConstraints())->map(function($entry) {
             return implode('', [$entry[0], '(', $this->getTaskConstraintParameterOutput($entry[1]), ')']);
         })->implode(' -> ');
     }
@@ -66,8 +66,12 @@ class PreviewCommand extends Command
     protected function getTaskConstraintParameterOutput(array $parameters)
     {
         return Collection::wrap($parameters)->flatten()->map(function($parameter) {
-            if (is_scalar($parameter)) return $parameter;
-            if (is_object($parameter)) return (new ReflectionClass($parameter))->getShortName();
+            if (is_scalar($parameter)) {
+                return $parameter;
+            }
+            if (is_object($parameter)) {
+                return (new ReflectionClass($parameter))->getShortName();
+            }
             return print_r($parameter, true);
         })->implode(', ');
     }

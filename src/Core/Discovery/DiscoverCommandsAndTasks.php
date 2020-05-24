@@ -28,7 +28,7 @@ class DiscoverCommandsAndTasks
         $snapshot = $this->loadSnapshot();
 
         // if snapshot contains invalid information - we force a rebuild
-        if (! empty($snapshot) && ! $snapshot->validate()) {
+        if (!empty($snapshot) && !$snapshot->validate()) {
             $snapshot = null;
         }
 
@@ -61,8 +61,8 @@ class DiscoverCommandsAndTasks
             ->ignoringPathsOrClasses($config->getDiscoveryIgnores())
             ->getCommandsAndTasks();
 
-        $schedulerCommands = $commandsAndTasks['commands']->filter(function($command){
-            return ! ($command instanceof CommandByAlias);
+        $schedulerCommands = $commandsAndTasks['commands']->filter(function($command) {
+            return !($command instanceof CommandByAlias);
         });
 
         // registry removes duplicates from both command sources by user command hashes
@@ -83,7 +83,7 @@ class DiscoverCommandsAndTasks
     protected function loadSnapshot(): ?Snapshot
     {
         $data = $this->getStorage()->get($this->getSnapshotKey());
-        if (! empty($data)) {
+        if (!empty($data)) {
             return Snapshot::fromArray($this->app, $data);
         }
         return null;

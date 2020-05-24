@@ -6,30 +6,30 @@ use Illuminate\Contracts\Container\Container;
 
 class ClassParameter extends Parameter
 {
-	protected $name;
+    protected $name;
     protected $className;
-	protected $value;
+    protected $value;
 
-	public function __construct(string $name, string $className, $value = null)
-	{
-		parent::__construct($name, $value);
+    public function __construct(string $name, string $className, $value = null)
+    {
+        parent::__construct($name, $value);
         $this->className = $className;
-	}
+    }
 
-	public function resolveValue(Container $container)
-	{
-		return $container->make($this->getClassName());
-	}
+    public function resolveValue(Container $container)
+    {
+        return $container->make($this->getClassName());
+    }
 
-	public function getType(): string
-	{
-		return 'class';
-	}
+    public function getType(): string
+    {
+        return 'class';
+    }
 
-	public function getClassName(): string
-	{
-		return $this->className;
-	}
+    public function getClassName(): string
+    {
+        return $this->className;
+    }
 
     protected static function parseBaseInstance(array $data): Parameter
     {

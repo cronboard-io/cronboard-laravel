@@ -16,7 +16,7 @@ class CommandContext
 
     public function isConsoleCommandContext(string $command): bool
     {
-        if (! $this->app->runningInConsole()) {
+        if (!$this->app->runningInConsole()) {
             return false;
         }
 

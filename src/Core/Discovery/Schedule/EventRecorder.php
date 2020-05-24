@@ -8,16 +8,16 @@ use Illuminate\Support\Collection;
 
 class EventRecorder
 {
-	protected $event;
+    protected $event;
     protected $eventData;
-	protected $constraintsRecorder;
+    protected $constraintsRecorder;
 
-	public function __construct(Event $event, array $eventData)
-	{
-		$this->event = $event;
+    public function __construct(Event $event, array $eventData)
+    {
+        $this->event = $event;
         $this->eventData = $eventData;
-		$this->constraintsRecorder = new ConstraintsRecorder;
-	}
+        $this->constraintsRecorder = new ConstraintsRecorder;
+    }
 
     public function __call($method, $args)
     {
@@ -28,7 +28,7 @@ class EventRecorder
 
     public function getRecordedEvent(): Event
     {
-    	return $this->event;
+        return $this->event;
     }
 
     public function getRecordedEventData(): array

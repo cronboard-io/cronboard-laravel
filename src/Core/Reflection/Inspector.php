@@ -18,25 +18,25 @@ class Inspector
 {
     protected $class;
 
-	public function __construct(string $class = null)
+    public function __construct(string $class = null)
     {
         $this->class = $class;
     }
 
     public function getReport(): Report
     {
-        if (empty($this->class) || ! class_exists($this->class)) {
+        if (empty($this->class) || !class_exists($this->class)) {
             return new Report(false);
         }
 
         $reflectionClass = new ReflectionClass($this->class);
-        if (! $reflectionClass->isInstantiable()) {
+        if (!$reflectionClass->isInstantiable()) {
             return new Report(false);
         }
 
         $constructor = $reflectionClass->getConstructor();
         $parameters = new Parameters;
-        if (! empty($constructor)) {
+        if (!empty($constructor)) {
             $parameters = Parameters::wrap($this->inspectMethodParameters($constructor));
         }
 
@@ -50,12 +50,12 @@ class Inspector
 
     public function inspectMethodParameters(ReflectionMethod $method): Collection
     {
-        return Collection::wrap($method->getParameters())->map(function($reflectionParameter){
+        return Collection::wrap($method->getParameters())->map(function($reflectionParameter) {
             $type = $reflectionParameter->getType();
             $value = $reflectionParameter->isDefaultValueAvailable() ? $reflectionParameter->getDefaultValue() : null;
             $name = $reflectionParameter->getName();
 
-            if (! empty($type)) {
+            if (!empty($type)) {
                 $type = $type->getName();
 
                 $parameter = null;
@@ -77,14 +77,14 @@ class Inspector
                     }
                 }
 
-                if (! empty($parameter)) {
-                    return $parameter->setRequired(! $reflectionParameter->isDefaultValueAvailable());
+                if (!empty($parameter)) {
+                    return $parameter->setRequired(!$reflectionParameter->isDefaultValueAvailable());
                 }
             }
 
             return (new ImmutableParameter($name))
                 ->setDefault($value)
-                ->setRequired(! $reflectionParameter->isDefaultValueAvailable());
+                ->setRequired(!$reflectionParameter->isDefaultValueAvailable());
         });
     }
 }

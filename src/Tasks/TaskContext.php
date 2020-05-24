@@ -46,7 +46,7 @@ class TaskContext implements Arrayable
         $this->task = $taskKey;
         $this->entered = false;
 
-        $this->modules = Collection::wrap($modules)->combine($modules)->map(function($module){
+        $this->modules = Collection::wrap($modules)->combine($modules)->map(function($module) {
             return $this->container->make($module);
         });
         $this->hooks = $this->modules->map->getHooks();
@@ -72,7 +72,7 @@ class TaskContext implements Arrayable
             return in_array($method, $hooks) ? $moduleKey : null;
         })->filter()->first();
 
-        if (! empty($supportedByModule)) {
+        if (!empty($supportedByModule)) {
 
             $module = $this->modules->get($supportedByModule);
             $result = call_user_func_array([$module, $method], $args);
@@ -123,7 +123,7 @@ class TaskContext implements Arrayable
 
     public function toArray()
     {
-        $array = $this->modules->keyBy(function($module){
+        $array = $this->modules->keyBy(function($module) {
             return $this->getModuleKey($module);
         })->map->toArray();
 

@@ -72,7 +72,7 @@ class Recorder extends LaravelSchedule implements Connectable
     public function dontTrack(LaravelSchedule $schedule, Closure $scheduleGroup = null): LaravelSchedule
     {
         $recorder = new NullRecorder;
-        if (! is_null($scheduleGroup)) {
+        if (!is_null($scheduleGroup)) {
             $scheduleGroup($recorder);
         }
         return $recorder;

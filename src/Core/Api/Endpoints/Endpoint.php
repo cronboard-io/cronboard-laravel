@@ -77,11 +77,11 @@ class Endpoint
     {
         $responseContent = $response->getBody()->getContents();
 
-        if (! $disableVerify) {
+        if (!$disableVerify) {
             $signatureHeader = $response->getHeader(Signer::SIGNATURE_HEADER);
             $signature = $signatureHeader[0] ?? null;
 
-            if (empty($signature) || ! $this->requestVerifier->verify($responseContent, $signature)) {
+            if (empty($signature) || !$this->requestVerifier->verify($responseContent, $signature)) {
                 throw new Exception(400, 'Invalid response signature');
             }
         }

@@ -17,12 +17,12 @@ class EnvironmentVariableOverride extends Override
 {
     public function getType(): string
     {
-    	return 'env';
+        return 'env';
     }
 
     public function read(Container $container)
     {
-    	if (array_key_exists($this->key, $_ENV)) {
+        if (array_key_exists($this->key, $_ENV)) {
             return Some::create($_ENV[$this->key]);
         }
 
@@ -31,14 +31,14 @@ class EnvironmentVariableOverride extends Override
 
     public function write(Container $container, $value)
     {
-    	if ($value->isDefined()) {
+        if ($value->isDefined()) {
             // Laravel 5.6+
-    		$_ENV[$this->key] = $value->get();
+            $_ENV[$this->key] = $value->get();
             // Laravel 5.5
             putenv(implode('=', [$this->key, $value->get()]));
-    	} else {
-    		$this->clear();
-    	}
+        } else {
+            $this->clear();
+        }
     }
 
     public function clear()
@@ -48,12 +48,12 @@ class EnvironmentVariableOverride extends Override
 
     protected function valueFromArray($value)
     {
-    	return $value ? Some::create($value) : None::create();
+        return $value ? Some::create($value) : None::create();
     }
 
     protected function valueToArray($value)
     {
-    	return $value->isDefined() ? $value->get() : null;
+        return $value->isDefined() ? $value->get() : null;
     }
 
     public function normalize(string $key): string

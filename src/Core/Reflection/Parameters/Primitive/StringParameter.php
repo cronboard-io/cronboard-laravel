@@ -6,8 +6,8 @@ use Cronboard\Core\Reflection\Parameters\Parameter;
 
 class StringParameter extends Parameter
 {
-	public function getType(): string
-	{
-		return 'string';
-	}
+    public function getType(): string
+    {
+        return 'string';
+    }
 }

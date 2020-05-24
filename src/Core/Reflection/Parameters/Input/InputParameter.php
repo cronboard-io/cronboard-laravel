@@ -7,8 +7,8 @@ use Cronboard\Core\Reflection\ParseParameters;
 
 abstract class InputParameter extends Parameter
 {
-	protected $internalParameter;
-	protected $description;
+    protected $internalParameter;
+    protected $description;
     protected $wrapperType;
 
     public function __construct(Parameter $internalParameter)
@@ -17,10 +17,10 @@ abstract class InputParameter extends Parameter
         parent::__construct($internalParameter->getName(), $internalParameter->getValue());
     }
 
-	public function getInternalParameter(): Parameter
-	{
-		return $this->internalParameter;
-	}
+    public function getInternalParameter(): Parameter
+    {
+        return $this->internalParameter;
+    }
 
     abstract public function getWrapperType(): string;
 
@@ -29,23 +29,23 @@ abstract class InputParameter extends Parameter
         return $this->internalParameter->getType();
     }
 
-	public function setDescription(string $description = null): self
-	{
-		$this->description = $description;
-		return $this;
-	}
-
-	public function getDescription()
-	{
-		return $this->description;
-	}
-
-	public function toArray()
+    public function setDescription(string $description = null): self
     {
-    	return parent::toArray() + [
+        $this->description = $description;
+        return $this;
+    }
+
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    public function toArray()
+    {
+        return parent::toArray() + [
             'wrapperType' => $this->getWrapperType(),
             'description' => $this->description,
-    	];
+        ];
     }
 
     /**
@@ -65,7 +65,7 @@ abstract class InputParameter extends Parameter
 
     protected static function parseBaseInstance(array $data): Parameter
     {
-    	$internalParameter = (new ParseParameters)->parseParameter($data);
+        $internalParameter = (new ParseParameters)->parseParameter($data);
         return (new static($internalParameter))
             ->setDescription($data['description'] ?? null);
     }

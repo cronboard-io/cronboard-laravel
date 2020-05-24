@@ -36,7 +36,9 @@ class Builder
 
     protected function appendSupportData(Command $command = null): ?Command
     {
-        if (empty($command)) return $command;
+        if (empty($command)) {
+            return $command;
+        }
         return (new CommandSupport)->extend($command);
     }
 }

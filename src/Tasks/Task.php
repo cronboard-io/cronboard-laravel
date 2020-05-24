@@ -68,7 +68,7 @@ class Task
 
     public function isSingleExecution(): bool
     {
-        return !! $this->singleExecution;
+        return !!$this->singleExecution;
     }
 
     public function toArray(): array

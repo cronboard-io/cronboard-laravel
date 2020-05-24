@@ -46,9 +46,9 @@ class Snapshot
 
     public function validate(): bool
     {
-        return $this->commands->filter(function($command){
+        return $this->commands->filter(function($command) {
             if ($command->isConsoleCommand() || $command->isJobCommand() || $command->isInvokableCommand()) {
-                return ! class_exists($command->getHandler());
+                return !class_exists($command->getHandler());
             }
             return false;
         })->isEmpty();
@@ -61,9 +61,9 @@ class Snapshot
 
     public function getCommandsByAlias(): Collection
     {
-        return $this->commands->filter(function($command){
+        return $this->commands->filter(function($command) {
             return $command->isConsoleCommand();
-        })->keyBy(function($command){
+        })->keyBy(function($command) {
             return $command->resolveHandlerByContainer($this->container)->getName();
         });
     }
@@ -83,8 +83,8 @@ class Snapshot
 
     protected function getTasksForStorage(): Collection
     {
-        return $this->tasks->filter(function($task){
-            return ! $task->isSingleExecution();
+        return $this->tasks->filter(function($task) {
+            return !$task->isSingleExecution();
         });
     }
 
@@ -104,7 +104,7 @@ class Snapshot
 
         // remove expired / complete remote tasks from the snapshot
         $this->tasks = $this->tasks->merge($remoteTasks)->filter(function($task) use ($remoteTaskKeys) {
-            return ! $task->isCronboardTask() || $remoteTaskKeys->contains($task->getKey());
+            return !$task->isCronboardTask() || $remoteTaskKeys->contains($task->getKey());
         });
     }
 }

@@ -50,7 +50,7 @@ trait TrackedEvent
         });
 
         $isCallbackEvent = $this instanceof CallbackEvent;
-        if (! $isCallbackEvent) {
+        if (!$isCallbackEvent) {
             $this->after(function(Dispatcher $dispatcher) {
                 $this->notifyTaskFinished($dispatcher);
             });
@@ -97,21 +97,21 @@ trait TrackedEvent
     public function recordOutputInTask()
     {
         if (method_exists($this, 'ensureOutputIsBeingCaptured')) {
-            $this->ensureOutputIsBeingCaptured();  // Laravel 5.7+
+            $this->ensureOutputIsBeingCaptured(); // Laravel 5.7+
         } else if (method_exists($this, 'ensureOutputIsBeingCapturedForEmail')) {
             $this->ensureOutputIsBeingCapturedForEmail(); // Laravel 5.6
         }
 
-        if (! $this->recordingOutputInTask) {
+        if (!$this->recordingOutputInTask) {
             $this->recordingOutputInTask = true;
 
             $task = $this->task;
             $event = $this;
 
-            $this->then(function (Cronboard $cronboard) use ($task, $event) {
-                if (! empty($task)) {
+            $this->then(function(Cronboard $cronboard) use ($task, $event) {
+                if (!empty($task)) {
                     $output = $this->getEventOutput($event);
-                    if (! empty($output)) {
+                    if (!empty($output)) {
                         $cronboard->sendTaskOutput($task, $output);
                     }
                 }
@@ -121,10 +121,10 @@ trait TrackedEvent
 
     protected function getEventOutput(LaravelScheduleEvent $event)
     {
-        if (! $event->output ||
+        if (!$event->output ||
             $event->output === $event->getDefaultOutput() ||
             $event->shouldAppendOutput ||
-            ! file_exists($event->output)) {
+            !file_exists($event->output)) {
             return '';
         }
         return trim(file_get_contents($event->output));
@@ -155,7 +155,7 @@ trait TrackedEvent
         $taskContext = $this->getCronboard()->setTaskContext($task);
         $output = $this->cronboard->getOutput();
 
-        if (($taskContext && ! $taskContext->isActive())) {
+        if (($taskContext && !$taskContext->isActive())) {
             if ($output) {
                 $output->disabled('Scheduled command is disabled and will not run: ' . $this->getSummaryForDisplay());
             }
@@ -168,7 +168,7 @@ trait TrackedEvent
                 $output->comment('Please run `cronboard:record` if you haven\'t or use a unique `name()` or `description()` to facilitate integration with Cronboard.');
             }
 
-            if (! empty($taskContext) && ! $taskContext->isTracked()) {
+            if (!empty($taskContext) && !$taskContext->isTracked()) {
                 $output->silent('Scheduled command is silenced and will not report to Cronboard: ' . $this->getSummaryForDisplay());
             }
         }

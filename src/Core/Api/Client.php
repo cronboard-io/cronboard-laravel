@@ -20,7 +20,9 @@ class Client extends GuzzleClient
 
     public function getAuthHeaders(): array
     {
-        if (empty($this->token)) return [];
+        if (empty($this->token)) {
+            return [];
+        }
         return [
             'Authorization' => 'Bearer ' . $this->token
         ];

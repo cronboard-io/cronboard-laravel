@@ -72,13 +72,13 @@ trait Exceptions
     private function insideTaskContext()
     {
         if ($taskContext = $this->getContext()) {
-            return ! empty($taskContext->getTask());
+            return !empty($taskContext->getTask());
         }
         return false;
     }
 
     private function eventContainsValidException($event)
     {
-        return isset($event->context['exception']) && $event->context['exception'] instanceof Exception && ! ($event->context['exception'] instanceof CronboardException);
+        return isset($event->context['exception']) && $event->context['exception'] instanceof Exception && !($event->context['exception'] instanceof CronboardException);
     }
 }

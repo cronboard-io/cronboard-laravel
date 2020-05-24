@@ -8,11 +8,11 @@ use Illuminate\Contracts\Support\Arrayable;
 
 class Environment implements Arrayable
 {
-	protected $app;
+    protected $app;
 
     public function __construct(Container $app)
     {
-    	$this->app = $app;
+        $this->app = $app;
     }
 
     public function toArray()
@@ -60,7 +60,7 @@ class Environment implements Arrayable
         $requiredVersion = $composerContents['require'][$package] ?? null;
         $requiredVersionDev = $composerContents['require-dev'][$package] ?? null;
         return [
-             'client_version' => $requiredVersion ?: ($requiredVersionDev ?: null)
+                'client_version' => $requiredVersion ?: ($requiredVersionDev ?: null)
         ];
     }
 

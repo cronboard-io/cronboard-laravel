@@ -6,34 +6,34 @@ use Exception;
 
 class ExceptionModule extends Module
 {
-	protected $exception;
+    protected $exception;
 
-	public function load(array $data)
-	{
-		$this->exception = $data['exception'] ?? null;
-	}
+    public function load(array $data)
+    {
+        $this->exception = $data['exception'] ?? null;
+    }
 
-	public function toArray(): array
-	{
-		return [
-			'exception' => $this->exception
-		];
-	}
+    public function toArray(): array
+    {
+        return [
+            'exception' => $this->exception
+        ];
+    }
 
-	public function getHooks(): array
-	{
-		return [
-			'getException',
-			'setException'
-		];
-	}
+    public function getHooks(): array
+    {
+        return [
+            'getException',
+            'setException'
+        ];
+    }
 
-	public function shouldStoreAfter(string $hookName): bool
-	{
-		return $hookName === 'setException';
-	}
+    public function shouldStoreAfter(string $hookName): bool
+    {
+        return $hookName === 'setException';
+    }
 
-	public function setException(Exception $exception)
+    public function setException(Exception $exception)
     {
         $this->exception = $this->exceptionToArray($exception);
     }

@@ -33,7 +33,7 @@ class RecordCommand extends Command
      */
     public function handle()
     {
-        if (! $this->validateCronboardConfiguration()) {
+        if (!$this->validateCronboardConfiguration()) {
             return 1;
         }
 

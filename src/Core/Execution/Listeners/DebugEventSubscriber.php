@@ -59,7 +59,7 @@ class DebugEventSubscriber extends EventSubscriber
     protected function getCommandTaskFromEvent($event): ?Task
     {
         $task = $this->getTaskFromEvent($event);
-        if (! empty($task) && $task->getCommand()->isConsoleCommand()) {
+        if (!empty($task) && $task->getCommand()->isConsoleCommand()) {
             if ($task->getCommand()->getAlias() !== $event->command) {
                 return null;
             }

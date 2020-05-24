@@ -12,9 +12,9 @@ class ParseContext extends Action
 {
     public function execute(array $context = null)
     {
-        return Collection::wrap($context ?: [])->map(function($data){
+        return Collection::wrap($context ?: [])->map(function($data) {
             return $this->parseContextOverride($data);
-        })->sort(function($override){
+        })->sort(function($override) {
             return $override->getType() == 'env' ? 1 : 2;
         })->values();
     }

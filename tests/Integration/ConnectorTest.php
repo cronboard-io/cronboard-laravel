@@ -12,9 +12,6 @@ class ConnectorTest extends TestCase
     /** @test */
     public function it_hooks_cronboard_into_schedule()
     {
-    	$schedule = $this->app->make(Schedule::class);
-        $this->assertEquals(get_class($schedule), CronboardSchedule::class);
-
         $configArray = array_merge($this->app->config['cronboard'], [
             'enabled' => true,
             'client' => [
@@ -24,6 +21,11 @@ class ConnectorTest extends TestCase
         $configuration = new Configuration($this->app, $configArray);
 
         $this->app['cronboard']->loadConfiguration($configuration);
+
+        $this->app->forgetInstance(Schedule::class);
+        $schedule = $this->app->make(Schedule::class);
+
+        $this->assertEquals(get_class($schedule), CronboardSchedule::class);
     }
 
     /** @test */
@@ -39,7 +41,9 @@ class ConnectorTest extends TestCase
 
         $this->app['cronboard']->loadConfiguration($configuration);
 
+        $this->app->forgetInstance(Schedule::class);
         $schedule = $this->app->make(Schedule::class);
+
         $this->assertNotEquals(get_class($schedule), CronboardSchedule::class);
         $this->assertEquals(get_class($schedule), Schedule::class);
     }
@@ -57,7 +61,9 @@ class ConnectorTest extends TestCase
 
         $this->app['cronboard']->loadConfiguration($configuration);
 
+        $this->app->forgetInstance(Schedule::class);
         $schedule = $this->app->make(Schedule::class);
+
         $this->assertNotEquals(get_class($schedule), CronboardSchedule::class);
         $this->assertEquals(get_class($schedule), Schedule::class);
     }

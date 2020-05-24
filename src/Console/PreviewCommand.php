@@ -6,6 +6,7 @@ use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
 use Cronboard\Tasks\Task;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
+use ReflectionClass;
 
 class PreviewCommand extends Command
 {

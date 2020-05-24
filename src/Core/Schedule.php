@@ -66,11 +66,6 @@ class Schedule extends LaravelSchedule
     protected function prepare()
     {
         if (!$this->ready && !empty($this->events)) {
-            $eventsWithTasks = Collection::wrap($this->events)->map(function($event){
-                $event->loadTaskFromCronboard();
-                return $event;
-            });
-
             $events = [];
             foreach ($this->events as $event) {
                 $task = $event->loadTaskFromCronboard();

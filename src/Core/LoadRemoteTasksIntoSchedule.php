@@ -14,7 +14,6 @@ use Cronboard\Support\CommandContext;
 use Cronboard\Tasks\Task;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Console\Scheduling\ScheduleRunCommand;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
@@ -37,7 +36,7 @@ class LoadRemoteTasksIntoSchedule
         $commandContext = new CommandContext($this->app);
 
         // if we're not running the schedule - no need to load remote commands
-        if (! $commandContext->isConsoleCommandContext(ScheduleRunCommand::class)) {
+        if (! $commandContext->isConsoleCommandContext('schedule:run')) {
             return $schedule;
         }
 

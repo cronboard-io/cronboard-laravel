@@ -18,7 +18,7 @@ trait Boot
     protected $booting = false;
     protected $offline = false;
 
-    public function ready(): bool
+    protected function ready(): bool
     {
         return $this->config->getEnabled() && $this->config->hasToken();
     }
@@ -55,7 +55,7 @@ trait Boot
             return true;
         }
 
-        return false;
+        return $this->booted();
     }
 
     private function shouldContactRemote(Snapshot $snapshot): bool

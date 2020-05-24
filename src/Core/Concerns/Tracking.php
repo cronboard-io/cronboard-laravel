@@ -12,6 +12,7 @@ use ReflectionClass;
 trait Tracking
 {
     abstract protected function ensureHasBooted(): bool;
+    abstract protected function ready(): bool;
 
     public function connect(LaravelSchedule $schedule, bool $unplug = false): LaravelSchedule
     {
@@ -19,9 +20,11 @@ trait Tracking
             return $schedule;
         }
 
-        if (!$this->ensureHasBooted()) {
+        if (!$this->ready()) {
             return $schedule;
         }
+
+        $this->ensureHasBooted();
 
         $eventsLoaded = false;
         $isDefaultSchedule = get_class($schedule) === LaravelSchedule::class;

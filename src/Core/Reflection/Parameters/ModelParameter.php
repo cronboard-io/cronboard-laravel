@@ -6,14 +6,14 @@ use Illuminate\Contracts\Container\Container;
 
 class ModelParameter extends ClassParameter
 {
-	public function getType(): string
-	{
-		return 'model';
-	}
+    public function getType(): string
+    {
+        return 'model';
+    }
 
-	public function resolveValue(Container $container)
-	{
-		$modelClass = $this->getClassName();
+    public function resolveValue(Container $container)
+    {
+        $modelClass = $this->getClassName();
         $value = null;
 
         $modelId = $this->getValue();
@@ -28,5 +28,5 @@ class ModelParameter extends ClassParameter
         }
 
         return $value;
-	}
+    }
 }

@@ -6,8 +6,8 @@ use Cronboard\Core\Reflection\Parameters\Parameter;
 
 class BooleanParameter extends Parameter
 {
-	public function getType(): string
-	{
-		return 'boolean';
-	}
+    public function getType(): string
+    {
+        return 'boolean';
+    }
 }

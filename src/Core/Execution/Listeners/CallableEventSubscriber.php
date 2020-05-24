@@ -36,7 +36,7 @@ class CallableEventSubscriber extends EventSubscriber
         $taskRequiresTrackingLabels = $task->getCommand()->isClosureCommand();
         $taskHasTrackingLabels = $this->taskContainsTrackingLabels($task);
 
-        if ($taskRequiresTrackingLabels && ! $taskHasTrackingLabels) {
+        if ($taskRequiresTrackingLabels && !$taskHasTrackingLabels) {
             return null;
         }
 
@@ -46,7 +46,7 @@ class CallableEventSubscriber extends EventSubscriber
     protected function taskContainsTrackingLabels(Task $task): bool
     {
         $trackingLabels = ['name', 'description'];
-        return ! Collection::wrap($task->getConstraints())->map(function($constraint){
+        return !Collection::wrap($task->getConstraints())->map(function($constraint) {
             return $constraint[0];
         })->intersect($trackingLabels)->isEmpty();
     }

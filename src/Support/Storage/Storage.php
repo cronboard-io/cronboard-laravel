@@ -6,7 +6,7 @@ use Illuminate\Contracts\Container\Container;
 
 class Storage
 {
-	protected $cache;
+    protected $cache;
 
     public function __construct(Container $container)
     {
@@ -15,16 +15,16 @@ class Storage
 
     public function store(string $key, $value)
     {
-    	$this->cache->forever($key, $value);
+        $this->cache->forever($key, $value);
     }
 
     public function get(string $key, $default = null)
     {
-    	return $this->cache->get($key, $default);
+        return $this->cache->get($key, $default);
     }
 
     public function remove(string $key)
     {
-    	return $this->cache->forget($key);
+        return $this->cache->forget($key);
     }
 }

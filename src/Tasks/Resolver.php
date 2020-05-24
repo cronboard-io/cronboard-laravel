@@ -32,15 +32,15 @@ class Resolver
     {
         $taskKey = $this->getTaskKeyEnvHelper();
 
-        if (! $taskKey) {
+        if (!$taskKey) {
             $taskKey = $this->getTaskKeyFromEnvArray();
         }
 
-        if (! $taskKey) {
+        if (!$taskKey) {
             $taskKey = $this->getTaskKeyFromServerArray();
         }
 
-        if (! $taskKey) {
+        if (!$taskKey) {
             $taskKey = $this->getTaskFromTestingEnvironment();
         }
 
@@ -85,7 +85,9 @@ class Resolver
 
     protected function getTask(string $key = null)
     {
-        if (empty($key)) return null;
+        if (empty($key)) {
+            return null;
+        }
         return $this->cronboard->getTaskByKey($key);
     }
 }

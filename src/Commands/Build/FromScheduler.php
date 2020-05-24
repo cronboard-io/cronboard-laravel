@@ -42,7 +42,9 @@ class FromScheduler
     protected function createJobCommand(array $call): ?Command
     {
         $argument = $call['args'][0] ?? null;
-        if (empty($argument)) return null;
+        if (empty($argument)) {
+            return null;
+        }
         $class = is_object($argument) ? get_class($argument) : $argument;
         return Command::job($class);
     }
@@ -62,7 +64,9 @@ class FromScheduler
     protected function createInvokableCommand(array $call): ?Command
     {
         $argument = $call['args'][0] ?? null;
-        if (empty($argument)) return null;
+        if (empty($argument)) {
+            return null;
+        }
 
         if ($argument instanceof Closure) {
             return Command::closure();

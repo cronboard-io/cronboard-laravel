@@ -11,17 +11,17 @@ class ConfigurationSettingOverride extends Override
 {
     public function getType(): string
     {
-    	return 'config';
+        return 'config';
     }
 
     public function read(Container $container)
     {
-    	return $container['config']->get($this->key);
+        return $container['config']->get($this->key);
     }
 
     public function write(Container $container, $value)
     {
-    	$container['config']->set($this->key, $value);
+        $container['config']->set($this->key, $value);
     }
 
     public function normalize(string $key): string

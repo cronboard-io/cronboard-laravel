@@ -35,7 +35,7 @@ class ParseParameters extends Action
 
     protected function parseParameterList($parameters)
     {
-        return Collection::wrap($parameters ?: [])->map(function($data){
+        return Collection::wrap($parameters ?: [])->map(function($data) {
             return $this->parseParameter($data);
         });
     }

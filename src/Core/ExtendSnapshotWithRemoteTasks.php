@@ -48,7 +48,7 @@ class ExtendSnapshotWithRemoteTasks
             $taskObjects = $this->createTasksFromPayload($tasks, $snapshot);
 
             $taskAliases = $response['aliases'] ?? [];
-            if (! empty($taskAliases)) {
+            if (!empty($taskAliases)) {
                 $aliasedTaskObjects = $this->createTasksFromTaskAliases($snapshot->getTasks(), $taskAliases, $tasks);
                 $taskObjects = $taskObjects->merge($aliasedTaskObjects);
 
@@ -78,7 +78,7 @@ class ExtendSnapshotWithRemoteTasks
     protected function createTasksFromTaskAliases(Collection $snapshotTasks, array $aliases, Collection $tasksPayload)
     {
         $keys = array_keys($aliases);
-        if (! empty($keys)) {
+        if (!empty($keys)) {
             $aliasedTasks = $snapshotTasks->map(function($task) use ($keys, $aliases, $tasksPayload) {
                 $taskKey = $task->getKey();
 
@@ -94,7 +94,7 @@ class ExtendSnapshotWithRemoteTasks
                 return null;
             })->filter();
 
-            if (! $aliasedTasks->isEmpty()) {
+            if (!$aliasedTasks->isEmpty()) {
                 return $aliasedTasks->keyBy->getKey();
             }
         }
@@ -103,7 +103,7 @@ class ExtendSnapshotWithRemoteTasks
 
     protected function shouldStoreSnapshot(Snapshot $snapshot)
     {
-        return ! empty($customScheduledTask = $snapshot->getTasks()->first(function($task){
+        return !empty($customScheduledTask = $snapshot->getTasks()->first(function($task) {
             return $task->isCronboardTask() && !$task->isSingleExecution();
         }));
     }
@@ -119,7 +119,7 @@ class ExtendSnapshotWithRemoteTasks
             $taskData = array_merge($defaultContext, $taskData);
 
             $context = new TaskContext($this->app, $taskKey);
-            $context->setTracking(! $taskData['silent']);
+            $context->setTracking(!$taskData['silent']);
             $context->setActive($taskData['active']);
             $context->setOnce($taskData['once']);
             $context->setOverrides($taskData['overrides'] ?? []);
@@ -147,7 +147,9 @@ class ExtendSnapshotWithRemoteTasks
     protected function createTaskFromPayload(array $taskData, Snapshot $snapshot): ?Task
     {
         $command = $snapshot->getCommandByKey($taskData['command']['key']);
-        if (empty($command)) return null;
+        if (empty($command)) {
+            return null;
+        }
 
         $parameters = (new ParseParameters)->execute($taskData['parameters']);
         $task = new Task($taskData['key'], $command, $parameters, $taskData['constraints']);

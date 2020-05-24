@@ -36,7 +36,7 @@ trait IgnoresPathsOrClasses
             if (in_array($class, $this->ignoredPathsOrClasses)) {
                 return true;
             }
-            if (! $checkExactClass) {
+            if (!$checkExactClass) {
                 $filename = (new ReflectionClass($class))->getFileName();
                 return $this->shouldIgnorePathName($filename);
             }
@@ -70,6 +70,6 @@ trait IgnoresPathsOrClasses
             ucfirst(Str::replaceLast('.php', '', $class))
         );
 
-        return $this->rootNamespace.$class;
+        return $this->rootNamespace . $class;
     }
 }

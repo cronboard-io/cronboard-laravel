@@ -21,7 +21,7 @@ class MetadataExtractor extends CommandMetadataExtractor
 
     protected function getNameFromTaskConstraints(Task $task): ?string
     {
-        return Collection::wrap($task->getConstraints())->map(function($constraint){
+        return Collection::wrap($task->getConstraints())->map(function($constraint) {
             if (in_array($constraint[0], ['name', 'description'])) {
                 return $constraint[1][0];
             }

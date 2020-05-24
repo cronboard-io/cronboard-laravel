@@ -45,7 +45,7 @@ final class DiscoverCommandsInCodebase
         $builder = new Builder($this->container);
 
         return collect($files)
-            ->reject(function (SplFileInfo $file) {
+            ->reject(function(SplFileInfo $file) {
 
                 $pathname = $file->getPathname();
 
@@ -59,7 +59,7 @@ final class DiscoverCommandsInCodebase
 
                 return false;
             })
-            ->map(function (SplFileInfo $file) use ($builder) {
+            ->map(function(SplFileInfo $file) use ($builder) {
 
                 $className = $this->getClassNameFromFile($file);
 

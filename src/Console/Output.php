@@ -13,7 +13,7 @@ class Output implements ExceptionListener
 
     public function __construct(OutputInterface $output)
     {
-    	$this->output = $output;
+        $this->output = $output;
 
         // define styles to be used for console output
         $this->defineOutputStyles();
@@ -26,12 +26,12 @@ class Output implements ExceptionListener
 
     public function silent(string $text)
     {
-    	$this->line($text, 'silent');
+        $this->line($text, 'silent');
     }
 
     public function disabled(string $text)
     {
-    	$this->line($text, 'disabled');
+        $this->line($text, 'disabled');
     }
 
     public function comment(string $text)
@@ -47,13 +47,13 @@ class Output implements ExceptionListener
 
     private function defineOutputStyles()
     {
-        if (! $this->output->getFormatter()->hasStyle('disabled')) {
+        if (!$this->output->getFormatter()->hasStyle('disabled')) {
             $style = new OutputFormatterStyle('red');
 
             $this->output->getFormatter()->setStyle('disabled', $style);
         }
 
-        if (! $this->output->getFormatter()->hasStyle('silent')) {
+        if (!$this->output->getFormatter()->hasStyle('silent')) {
             $style = new OutputFormatterStyle('yellow');
 
             $this->output->getFormatter()->setStyle('silent', $style);

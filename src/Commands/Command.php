@@ -31,7 +31,7 @@ class Command
     public function set(string $flag, bool $set = true)
     {
         if ($set) {
-            if (! in_array($flag, $this->flags)) {
+            if (!in_array($flag, $this->flags)) {
                 $this->flags[] = $flag;
             }
         } else {

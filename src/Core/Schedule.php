@@ -32,8 +32,8 @@ class Schedule extends LaravelSchedule
         $this->ready = false;
     }
 
-	protected function passThroughEventProxy(string $method, array $arguments)
-	{
+    protected function passThroughEventProxy(string $method, array $arguments)
+    {
         // we have an active event, which means we're in a nested call
         // we fallback to the default logic
         if ($this->insideEventScope) {
@@ -50,7 +50,7 @@ class Schedule extends LaravelSchedule
         $this->insideEventScope = false;
 
         return $event;
-	}
+    }
 
     protected function linkToCronboard($event)
     {
@@ -66,7 +66,7 @@ class Schedule extends LaravelSchedule
     protected function prepare()
     {
         if (!$this->ready && !empty($this->events)) {
-            $eventsWithTasks = Collection::wrap($this->events)->map(function($event){
+            $eventsWithTasks = Collection::wrap($this->events)->map(function($event) {
                 $event->loadTaskFromCronboard();
                 return $event;
             });
@@ -140,7 +140,7 @@ class Schedule extends LaravelSchedule
     public function exec($command, array $parameters = [])
     {
         if (count($parameters)) {
-            $command .= ' '.$this->compileParameters($parameters);
+            $command .= ' ' . $this->compileParameters($parameters);
         }
 
         $this->events[] = $event = new Event($this->getScheduleEventMutex(), $command, $this->timezone ?? null);
@@ -170,7 +170,7 @@ class Schedule extends LaravelSchedule
      */
     public function command($command, array $parameters = [])
     {
-    	return $this->passThroughEventProxy('command', func_get_args());
+        return $this->passThroughEventProxy('command', func_get_args());
     }
 
     /**
@@ -203,7 +203,7 @@ class Schedule extends LaravelSchedule
         if (method_exists($job, 'setTaskKey')) {
             $task = $event->loadTaskFromCronboard();
 
-            if (! empty($task)) {
+            if (!empty($task)) {
                 $job->setTaskKey($task->getKey());
             }
         }

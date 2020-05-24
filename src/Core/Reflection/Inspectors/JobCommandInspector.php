@@ -15,12 +15,12 @@ class JobCommandInspector extends Inspector
 
         $report->addParameterGroup(Parameters::GROUP_SCHEDULE, [
             StringParameter::create('queue')
-            	->setDefault(null)
-            	->setRequired(false),
+                ->setDefault(null)
+                ->setRequired(false),
 
             StringParameter::create('connection')
-            	->setDefault(null)
-            	->setRequired(false)
+                ->setDefault(null)
+                ->setRequired(false)
         ]);
 
         return $report;

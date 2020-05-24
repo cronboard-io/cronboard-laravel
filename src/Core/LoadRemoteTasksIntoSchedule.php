@@ -37,12 +37,12 @@ class LoadRemoteTasksIntoSchedule
         $commandContext = new CommandContext($this->app);
 
         // if we're not running the schedule - no need to load remote commands
-        if (! $commandContext->isConsoleCommandContext(ScheduleRunCommand::class)) {
+        if (!$commandContext->isConsoleCommandContext(ScheduleRunCommand::class)) {
             return $schedule;
         }
 
         // cronboard has not been boostrapped and we ignore pulling remote tasks
-        if (! ($schedule instanceof CronboardSchedule)) {
+        if (!($schedule instanceof CronboardSchedule)) {
             return $schedule;
         }
 

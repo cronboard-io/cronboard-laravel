@@ -24,10 +24,10 @@ class MemoryCollector extends Collector
     private function memoryLimitToBytes($memoryLimit)
     {
         $memoryLimit = trim($memoryLimit);
-        $last = strtolower($memoryLimit[strlen($memoryLimit)-1]);
+        $last = strtolower($memoryLimit[strlen($memoryLimit) - 1]);
         $memoryLimit = substr($memoryLimit, 0, -1);
 
-        switch($last) {
+        switch ($last) {
             case 'g':
                 $memoryLimit *= 1024;
             case 'm':

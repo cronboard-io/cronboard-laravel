@@ -7,31 +7,31 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class ExecuteJobTask extends ExecuteTask
 {
-	public function attach(Schedule $schedule)
-	{
-		$command = $this->task->getCommand();
-		$commandParameters = $this->getTaskParameters();
+    public function attach(Schedule $schedule)
+    {
+        $command = $this->task->getCommand();
+        $commandParameters = $this->getTaskParameters();
 
-		$scheduleParameters = $commandParameters->getGroupParameters(Parameters::GROUP_SCHEDULE)->toCollection();
-		$scheduleParameters = $scheduleParameters->keyBy(function($parameter){
-			return $parameter->getName();
-		})->map->getValue();
+        $scheduleParameters = $commandParameters->getGroupParameters(Parameters::GROUP_SCHEDULE)->toCollection();
+        $scheduleParameters = $scheduleParameters->keyBy(function($parameter){
+            return $parameter->getName();
+        })->map->getValue();
 
-		$job = $this->getJobInstance();
+        $job = $this->getJobInstance();
 
-		return $schedule->job($job, $scheduleParameters->get('queue'), $scheduleParameters->get('connection'));
-	}
+        return $schedule->job($job, $scheduleParameters->get('queue'), $scheduleParameters->get('connection'));
+    }
 
-	public function getJobInstance()
-	{
-		$command = $this->task->getCommand();
-		$commandParameters = $this->getTaskParameters();
+    public function getJobInstance()
+    {
+        $command = $this->task->getCommand();
+        $commandParameters = $this->getTaskParameters();
 
-		$constructorParameters = $commandParameters->getGroupParameters(Parameters::GROUP_CONSTRUCTOR)->toCollection();
-		$constructorParameters = $this->extractParameterValues($constructorParameters);
+        $constructorParameters = $commandParameters->getGroupParameters(Parameters::GROUP_CONSTRUCTOR)->toCollection();
+        $constructorParameters = $this->extractParameterValues($constructorParameters);
 
-		$jobClass = $command->getHandler();
+        $jobClass = $command->getHandler();
 
-		return $this->app->make($command->getHandler(), $constructorParameters);
-	}
+        return $this->app->make($command->getHandler(), $constructorParameters);
+    }
 }

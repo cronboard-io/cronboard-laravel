@@ -6,48 +6,48 @@ use Illuminate\Console\Scheduling\Event;
 
 class OutputModule extends Module
 {
-	protected $output;
+    protected $output;
     protected $outputSource;
 
 
-	public function load(array $data)
-	{
-		$this->output = $data['output'] ?? null;
-		$this->outputSource = $data['outputSource'] ?? null;
-	}
+    public function load(array $data)
+    {
+        $this->output = $data['output'] ?? null;
+        $this->outputSource = $data['outputSource'] ?? null;
+    }
 
-	public function toArray(): array
-	{
-		return [
-			'output' => $this->output,
-			'outputSource' => $this->outputSource,
-		];
-	}
+    public function toArray(): array
+    {
+        return [
+            'output' => $this->output,
+            'outputSource' => $this->outputSource,
+        ];
+    }
 
-	public function getHooks(): array
-	{
-		return [
-			'readsOutputFromEvent',
-			'getOutput'
-		];
-	}
+    public function getHooks(): array
+    {
+        return [
+            'readsOutputFromEvent',
+            'getOutput'
+        ];
+    }
 
-	public function shouldStoreAfter(string $hookName): bool
-	{
-		return in_array($hookName, [
-			'readsOutputFromEvent',
-			'setOutput'
-		]);
-	}
+    public function shouldStoreAfter(string $hookName): bool
+    {
+        return in_array($hookName, [
+            'readsOutputFromEvent',
+            'setOutput'
+        ]);
+    }
 
-	public function onContextFinalise()
-	{
-		if (empty($this->outputSource) && file_exists($this->outputSource)) {
+    public function onContextFinalise()
+    {
+        if (empty($this->outputSource) && file_exists($this->outputSource)) {
             $this->setOutput(trim(file_get_contents($this->outputSource)));
         }
-	}
+    }
 
-	public function readsOutputFromEvent(Event $event)
+    public function readsOutputFromEvent(Event $event)
     {
         $this->outputSource = $this->getEventOutput($event);
     }
@@ -59,10 +59,10 @@ class OutputModule extends Module
 
     private function getEventOutput(Event $event)
     {
-        if (! $event->output ||
+        if (!$event->output ||
             $event->output === $event->getDefaultOutput() ||
             $event->shouldAppendOutput ||
-            ! file_exists($event->output)) {
+            !file_exists($event->output)) {
             return null;
         }
         return $event->output;

@@ -42,12 +42,12 @@ class ConsoleCommandInspector extends Inspector
 
     protected function getCommandInstance(): ?Command
     {
-        if (! class_exists($this->class)) {
+        if (!class_exists($this->class)) {
             return null;
         }
 
         $reflectionClass = new ReflectionClass($this->class);
-        if (! $reflectionClass->isInstantiable()) {
+        if (!$reflectionClass->isInstantiable()) {
             return null;
         }
 

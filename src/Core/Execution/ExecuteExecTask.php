@@ -7,12 +7,12 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class ExecuteExecTask extends ExecuteCommandTask
 {
-	public function attach(Schedule $schedule)
-	{
-		$command = $this->task->getCommand();
+    public function attach(Schedule $schedule)
+    {
+        $command = $this->task->getCommand();
 		
-		$commandLineParameters = $this->getCommandLineParameters();
+        $commandLineParameters = $this->getCommandLineParameters();
 
-		return $schedule->exec($command->getHandler(), $commandLineParameters);
-	}
+        return $schedule->exec($command->getHandler(), $commandLineParameters);
+    }
 }

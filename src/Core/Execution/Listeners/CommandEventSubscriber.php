@@ -36,7 +36,7 @@ class CommandEventSubscriber extends EventSubscriber
     protected function getTaskFromEvent($event): ?Task
     {
         $task = $event->task ?? null;
-        if (! empty($task) && $task instanceof Task) {
+        if (!empty($task) && $task instanceof Task) {
             return $task;
         }
         return (new Resolver($this->cronboard))->resolveFromEnvironment();
@@ -65,7 +65,7 @@ class CommandEventSubscriber extends EventSubscriber
     protected function getTaskFromEventAndVerify($event)
     {
         $task = $this->getTaskFromEvent($event);
-        if (! empty($task) && $this->isTaskSupported($task)) {
+        if (!empty($task) && $this->isTaskSupported($task)) {
             // context does not match the command in the event;
             // most likely the event was for the schedule:finish command
             if ($task->getCommand()->getAlias() !== $event->command) {

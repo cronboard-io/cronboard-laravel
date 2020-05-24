@@ -36,7 +36,9 @@ class Parameters implements Arrayable, Countable, IteratorAggregate
 
     public function fillParameterValues(array $values, bool $byKey = true)
     {
-        if (empty($values)) return $this;
+        if (empty($values)) {
+            return $this;
+        }
 
         $this->items = $this->fillParameterListWithValues($this->items, $values, $byKey);
 
@@ -45,7 +47,9 @@ class Parameters implements Arrayable, Countable, IteratorAggregate
 
     protected function fillParameterListWithValues(Collection $parameters, array $values, bool $byKey)
     {
-        if (empty($values)) return $parameters;
+        if (empty($values)) {
+            return $parameters;
+        }
 
         return $parameters->map(function($parameter, $index) use ($values, $byKey) {
             $value = $byKey ? ($values[$parameter->getName()] ?? null) : ($values[$index] ?? null);

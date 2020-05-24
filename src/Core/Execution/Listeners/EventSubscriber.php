@@ -64,7 +64,7 @@ abstract class EventSubscriber
     protected function failTask(Task $task = null, BaseException $exception = null)
     {
         if (empty($task)) return;
-        if (! $this->isTaskSupported($task)) return;
+        if (!$this->isTaskSupported($task)) return;
         try {
             if ($context = $this->enterTaskContext($task)) {
                 $this->cronboard->fail($task, $exception);
@@ -79,7 +79,7 @@ abstract class EventSubscriber
     protected function startTask(Task $task = null)
     {
         if (empty($task)) return;
-        if (! $this->isTaskSupported($task)) return;
+        if (!$this->isTaskSupported($task)) return;
         try {
             if ($context = $this->enterTaskContext($task)) {
                 $this->cronboard->start($task);
@@ -93,7 +93,7 @@ abstract class EventSubscriber
     protected function endTask(Task $task = null, array $data = [])
     {
         if (empty($task)) return;
-        if (! $this->isTaskSupported($task)) return;
+        if (!$this->isTaskSupported($task)) return;
 
         try {
             if ($context = $this->setTaskContext($task)) {
@@ -110,7 +110,7 @@ abstract class EventSubscriber
     protected function enterTaskContext(Task $task)
     {
         // if current subscriber does not support this type of task
-        if (! $this->isTaskSupported($task)) return;
+        if (!$this->isTaskSupported($task)) return;
 
         // try to get existing context because it may have been set already
         // for tasks that run in the same process as the schedule:run
@@ -121,7 +121,7 @@ abstract class EventSubscriber
             $context = $this->setTaskContext($task);
         }
 
-        if (! empty($context)) {
+        if (!empty($context)) {
             $context->enter();
         }
 
@@ -131,7 +131,7 @@ abstract class EventSubscriber
     protected function exitTaskContext(Task $task)
     {
         $context = $this->setTaskContext($task);
-        if (! empty($context)) {
+        if (!empty($context)) {
             // remove context from cronboard instance
             $this->setTaskContext(null);
             // trigger exit callbacks

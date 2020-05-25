@@ -102,9 +102,9 @@ class Snapshot
     {
         $remoteTaskKeys = $remoteTasks->map->getKey();
 
-        // remove expired / complete remote tasks from the snapshot
+        // remove old remote tasks from the snapshot
         $this->tasks = $this->tasks->merge($remoteTasks)->filter(function($task) use ($remoteTaskKeys) {
-            return !$task->isCronboardTask() || $remoteTaskKeys->contains($task->getKey());
+            return ! $task->isCronboardTask() || $remoteTaskKeys->contains($task->getKey());
         });
     }
 }

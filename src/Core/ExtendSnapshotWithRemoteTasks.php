@@ -103,9 +103,10 @@ class ExtendSnapshotWithRemoteTasks
 
     protected function shouldStoreSnapshot(Snapshot $snapshot)
     {
-        return !empty($customScheduledTask = $snapshot->getTasks()->first(function($task) {
-            return $task->isCronboardTask() && !$task->isSingleExecution();
-        }));
+        $customScheduledTask = $snapshot->getTasks()->first(function($task) {
+            return $task->isCronboardTask() && ! $task->isSingleExecution();
+        });
+        return ! empty($customScheduledTask);
     }
 
     protected function loadTaskContext(Collection $tasksPayload)

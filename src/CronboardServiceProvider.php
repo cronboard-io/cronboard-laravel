@@ -50,7 +50,7 @@ class CronboardServiceProvider extends ServiceProvider
                 RecordCommand::class,
                 PreviewCommand::class,
                 StatusCommand::class,
-                InstallCommand::class
+                InstallCommand::class,
             ]);
 
             Queue::before(function(JobProcessing $event) {

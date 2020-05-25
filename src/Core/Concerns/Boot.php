@@ -2,13 +2,13 @@
 
 namespace Cronboard\Core\Concerns;
 
-use Cronboard\Console\InstallCommand;
 use Cronboard\Core\Api\Exception;
 use Cronboard\Core\Config\Configuration;
 use Cronboard\Core\Config\ConfigurationException;
 use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
 use Cronboard\Core\Discovery\Snapshot;
 use Cronboard\Core\ExtendSnapshotWithRemoteTasks;
+use Illuminate\Console\Command;
 
 trait Boot
 {
@@ -17,6 +17,8 @@ trait Boot
     protected $booted = false;
     protected $booting = false;
     protected $offline = false;
+
+    protected $commandsWithRemoteAccess = ['schedule:run', 'schedule:finish'];
 
     protected function ready(): bool
     {
@@ -58,6 +60,21 @@ trait Boot
         return $this->booted();
     }
 
+    public function allowRemoteAccessForCommand($command)
+    {
+        $commandToAdd = null;
+        
+        if ($command instanceof Command) {
+            $commandToAdd = $command->getName();
+        } else if (is_string($command)) {
+            $commandToAdd = $command;
+        }
+
+        if (! is_null($commandToAdd)) {
+            $this->commandsWithRemoteAccess[] = $commandToAdd;
+        }
+    }
+
     private function shouldContactRemote(Snapshot $snapshot): bool
     {
         if ($this->app->runningInConsole()) {
@@ -70,9 +87,7 @@ trait Boot
     private function commandNeedsRemoteTasks(string $commandName, Snapshot $snapshot): bool
     {
         $acceptedConsoleCommands = $snapshot->getCommands()->filter->isConsoleCommand()->map->getAlias();
-        $acceptedConsoleCommands = $acceptedConsoleCommands->merge([
-            'schedule:run', 'schedule:finish'
-        ]);
+        $acceptedConsoleCommands = $acceptedConsoleCommands->merge($this->commandsWithRemoteAccess);
         return $acceptedConsoleCommands->contains($commandName);
     }
 

@@ -23,7 +23,7 @@ class DiscoverCommandsAndTasks
         $this->app = $app;
     }
 
-    public function getSnapshot(): Snapshot
+    public function getSnapshot(bool $store = true): Snapshot
     {
         $snapshot = $this->loadSnapshot();
 
@@ -33,7 +33,7 @@ class DiscoverCommandsAndTasks
         }
 
         if (empty($snapshot)) {
-            $snapshot = $this->getNewSnapshotAndStore();
+            $snapshot = $store ? $this->getNewSnapshotAndStore() : $this->getNewSnapshot();
         }
 
         return $snapshot;

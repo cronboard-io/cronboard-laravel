@@ -28,14 +28,12 @@ class Cronboard implements Connectable
     use Concerns\Tracking;
 
     protected $tasks;
-    protected $commands;
 
     public function __construct(Container $app, Configuration $config)
     {
         $this->app = $app;
         $this->config = $config;
 
-        $this->commands = new Collection;
         $this->tasks = new Collection;
 
         $this->exceptionListeners = new Collection;
@@ -48,8 +46,9 @@ class Cronboard implements Connectable
 
     public function loadSnapshot(Snapshot $snapshot)
     {
-        $this->commands = $snapshot->getCommands();
-        $this->tasks = $snapshot->getTasks()->keyBy->getKey();
+        $this->tasks = $snapshot->getTasks()->keyBy(function($task){
+            return $task->isRuntimeTask() ? $task->getOriginalTaskKey() : $task->getKey();
+        });
         return $this;
     }
 
@@ -131,7 +130,7 @@ class Cronboard implements Connectable
                 if ($responseKey) {
                     // add queue task to current task list, so that it can be picked up if
                     // we're executing jobs using the sync driver
-                    $queuedTask = $task->aliasAsCustomTask($responseKey);
+                    $queuedTask = $task->aliasAsRuntimeInstance($responseKey);
 
                     return $this->switchToTaskInstance($task, $responseKey, $queuedTask);
                 }
@@ -157,7 +156,7 @@ class Cronboard implements Connectable
     {
         if ($originalTask->getKey() !== $key) {
             if (is_null($taskInstance)) {
-                $taskInstance = $originalTask->aliasAsTaskInstance($key);
+                $taskInstance = $originalTask->aliasAsRuntimeInstance($key);
             }
 
             if (!$this->tasks->has($key)) {

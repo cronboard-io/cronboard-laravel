@@ -33,7 +33,10 @@ class DiscoverCommandsAndTasks
         }
 
         if (empty($snapshot)) {
-            $snapshot = $store ? $this->getNewSnapshotAndStore() : $this->getNewSnapshot();
+            $snapshot = $this->getNewSnapshot();
+            if ($store) {
+                $this->storeSnapshot($snapshot);
+            }
         }
 
         return $snapshot;

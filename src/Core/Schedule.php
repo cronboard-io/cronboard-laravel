@@ -69,15 +69,10 @@ class Schedule extends LaravelSchedule
             $events = [];
             foreach ($this->events as $event) {
                 $task = $event->loadTaskFromCronboard();
-                if (empty($task) || !in_array($taskKey = $task->getKey(), $this->loadedTasks)) {
-                    $events[] = $event;
-                    if ($task) {
-                        $this->loadedTasks[] = $taskKey;
-                    }
-                }
+                $key = empty($task) ? md5(uniqid() . $event->expression) : $task->getKey();
+                $events[$key] = $event;
             }
-            $this->events = $events;
-
+            $this->events = array_values($events);
             $this->ready = true;
         }
     }

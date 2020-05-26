@@ -8,11 +8,13 @@ use Cronboard\Core\Reflection\Parameters;
 class Task
 {
     protected $key;
+    protected $originalTaskKey;
     protected $command;
     protected $parameters;
     protected $constraints;
     protected $custom;
-    protected $singleExecution;
+    protected $runtime;
+    protected $single;
     protected $details;
 
     public function __construct(string $key, Command $command, Parameters $parameters, array $constraints, bool $custom = false)
@@ -22,7 +24,8 @@ class Task
         $this->parameters = $parameters;
         $this->constraints = $constraints;
         $this->custom = $custom;
-        $this->singleExecution = false;
+        $this->runtime = false;
+        $this->single = false;
         $this->details = [];
     }
 
@@ -56,11 +59,6 @@ class Task
         return $this->custom;
     }
 
-    public function setSingleExecution(bool $singleExecution)
-    {
-        $this->singleExecution = $singleExecution;
-    }
-
     public function isApplicationTask(): bool
     {
         return !$this->isCronboardTask();
@@ -68,7 +66,17 @@ class Task
 
     public function isSingleExecution(): bool
     {
-        return !!$this->singleExecution;
+        return $this->single;
+    }
+
+    public function isRuntimeTask(): bool
+    {
+        return $this->runtime;
+    }
+
+    public function setSingleExecution(bool $single)
+    {
+        $this->single = $single;
     }
 
     public function toArray(): array
@@ -96,17 +104,25 @@ class Task
         return $this->key;
     }
 
-    public function aliasAsCustomTask(string $key)
+    public function getOriginalTaskKey(): ?string
+    {
+        return $this->originalTaskKey;
+    }
+
+    public function aliasAsRuntimeInstance(string $key, bool $single = false)
     {
         return $this->aliasAsTaskInstance($key, [
-            'custom' => true
+            'custom' => true,
+            'runtime' => true,
+            'single' => $single
         ]);
     }
 
-    public function aliasAsTaskInstance(string $key, array $attributes = [])
+    private function aliasAsTaskInstance(string $key, array $attributes = [])
     {
         return tap(clone $this, function($instance) use ($key, $attributes) {
             $instance->key = $key;
+            $instance->originalTaskKey = $this->getKey();
             foreach ($attributes as $attribute => $value) {
                 $instance->$attribute = $value;
             }

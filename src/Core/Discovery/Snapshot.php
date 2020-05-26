@@ -70,7 +70,7 @@ class Snapshot
 
     public function getTasks(): Collection
     {
-        return $this->tasks;
+        return $this->tasks->keyBy->getKey();
     }
 
     public function toArray(): array
@@ -83,8 +83,8 @@ class Snapshot
 
     protected function getTasksForStorage(): Collection
     {
-        return $this->tasks->filter(function($task) {
-            return !$task->isSingleExecution();
+        return $this->getTasks()->filter(function($task) {
+            return !$task->isSingleExecution() && !$task->isRuntimeTask();
         });
     }
 
@@ -104,7 +104,7 @@ class Snapshot
 
         // remove old remote tasks from the snapshot
         $this->tasks = $this->tasks->merge($remoteTasks)->filter(function($task) use ($remoteTaskKeys) {
-            return ! $task->isCronboardTask() || $remoteTaskKeys->contains($task->getKey());
+            return $task->isApplicationTask() || $remoteTaskKeys->contains($task->getKey());
         });
     }
 }

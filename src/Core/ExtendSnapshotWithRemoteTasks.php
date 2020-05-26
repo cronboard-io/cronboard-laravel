@@ -37,35 +37,28 @@ class ExtendSnapshotWithRemoteTasks
             $environmentInfo = (new Environment($this->app))->toArray();
             $environment = Arr::get($environmentInfo, 'environment');
 
+            // get remote tasks
             $response = $this->app->make(Cronboard::class)->cronboard($environment);
+            $scheduleTasksPayload = Collection::wrap($response['tasks']);
+            $tasksPayload = $scheduleTasksPayload->merge($response['queuedTasks']);
 
-            $tasksByKey = Collection::wrap($response['tasks'])->keyBy('key');
-            $queuedTasksByKey = Collection::wrap($response['queuedTasks'])->keyBy('key');
+            // get local and remote task definitions
+            $remoteScheduleTasks = $this->createTasksFromPayload($scheduleTasksPayload, $snapshot);
+            $localScheduleTasks = $snapshot->getTasks();
 
-            $tasks = $tasksByKey->merge($queuedTasksByKey);
-
-            // load remote tasks into snapshot (and into cronboard)
-            $taskObjects = $this->createTasksFromPayload($tasks, $snapshot);
-
+            // get task aliases
+            $scheduleTasks = $localScheduleTasks->merge($remoteScheduleTasks);
             $taskAliases = $response['aliases'] ?? [];
-            if (!empty($taskAliases)) {
-                $aliasedTaskObjects = $this->createTasksFromTaskAliases($snapshot->getTasks(), $taskAliases, $tasks);
-                $taskObjects = $taskObjects->merge($aliasedTaskObjects);
+            $remoteTaskAliases = $this->createTasksFromTaskAliases($scheduleTasks, $taskAliases, $tasksPayload);
 
-                // add context data for aliased tasks
-                foreach ($taskAliases as $taskKey => $aliasedTaskKey) {
-                    $tasks[$aliasedTaskKey] = $tasks[$aliasedTaskKey] ?? ($tasks[$taskKey] ?? []);
-                }
-            }
+            // add remote tasks to snapshot
+            $remoteTasks = $scheduleTasks->merge($remoteTaskAliases);
+            $snapshot->addRemoteTasks($remoteTasks);
 
-            $snapshot->addRemoteTasks($taskObjects);
-
-            if ($this->shouldStoreSnapshot($snapshot)) {
-                $this->storeSnapshot($snapshot);
-            }
+            $this->storeSnapshot($snapshot);
 
             // load contexts for all tasks and store locally
-            $this->loadTaskContext($tasks);
+            $this->loadTaskContext($tasksPayload, $taskAliases);
 
         } catch (Exception $e) {
             // report exception and return snapshot untouched
@@ -75,48 +68,42 @@ class ExtendSnapshotWithRemoteTasks
         return $snapshot;
     }
 
-    protected function createTasksFromTaskAliases(Collection $snapshotTasks, array $aliases, Collection $tasksPayload)
+    protected function createTasksFromTaskAliases(Collection $availableTasks, array $aliases, Collection $tasksPayload)
     {
-        $keys = array_keys($aliases);
-        if (!empty($keys)) {
-            $aliasedTasks = $snapshotTasks->map(function($task) use ($keys, $aliases, $tasksPayload) {
-                $taskKey = $task->getKey();
+        if (! empty($aliases)) {
+            $tasksPayloadByKey = $tasksPayload->keyBy('key');
+            $availableTasksByKey = $availableTasks->keyBy->getKey();
 
-                if (in_array($taskKey, $keys)) {
-                    $aliasedKey = $aliases[$taskKey];
-                    $taskData = $tasksPayload[$aliasedKey] ?? ($tasksPayload[$taskKey] ?? null);
-
-                    $aliasedTask = $task->aliasAsCustomTask($aliasedKey);
-                    $aliasedTask->setSingleExecution($taskData['once'] ?? false);
-
+            $aliasedTasks = Collection::wrap($aliases)->map(function($taskKey, $aliasedKey) use ($availableTasksByKey, $tasksPayloadByKey) {
+                $task = $availableTasksByKey->get($taskKey);
+                if (! empty($task)) {
+                    $taskData = $tasksPayloadByKey[$aliasedKey] ?? ($tasksPayloadByKey[$taskKey] ?? null);
+                    $aliasedTask = $task->aliasAsRuntimeInstance($aliasedKey, $taskData['once'] ?? false);
                     return $aliasedTask;
                 }
                 return null;
-            })->filter();
+            })->filter()->values();
 
             if (!$aliasedTasks->isEmpty()) {
-                return $aliasedTasks->keyBy->getKey();
+                return $aliasedTasks;
             }
         }
         return new Collection;
     }
 
-    protected function shouldStoreSnapshot(Snapshot $snapshot)
+    protected function loadTaskContext(Collection $tasksPayload, array $taskAliases)
     {
-        $customScheduledTask = $snapshot->getTasks()->first(function($task) {
-            return $task->isCronboardTask() && ! $task->isSingleExecution();
-        });
-        return ! empty($customScheduledTask);
-    }
+        $tasksPayloadByKey = $tasksPayload->keyBy('key');
+        foreach ($taskAliases as $aliasedTaskKey => $taskKey) {
+            $tasksPayloadByKey[$aliasedTaskKey] = $tasksPayloadByKey[$aliasedTaskKey] ?? ($tasksPayloadByKey[$taskKey] ?? []);
+        }
 
-    protected function loadTaskContext(Collection $tasksPayload)
-    {
         $defaultContext = [
             'silent' => 0,
             'active' => 1,
             'once' => 0,
         ];
-        foreach ($tasksPayload as $taskKey => $taskData) {
+        foreach ($tasksPayloadByKey as $taskKey => $taskData) {
             $taskData = array_merge($defaultContext, $taskData);
 
             $context = new TaskContext($this->app, $taskKey);
@@ -130,19 +117,12 @@ class ExtendSnapshotWithRemoteTasks
     protected function createTasksFromPayload(Collection $tasksPayload, Snapshot $snapshot): Collection
     {
         $tasks = Collection::wrap($tasksPayload)
-            // create task objects
             ->map(function($taskData, $taskKey) use ($snapshot) {
                 return $this->createTaskFromPayload($taskData, $snapshot);
             })
-            // clear invalid tasks
             ->filter();
 
-        return $tasks->keyBy->getKey();
-    }
-
-    protected function isDefinedByCronboard(array $taskData): bool
-    {
-        return $taskData['source'] === 'cronboard';
+        return $tasks;
     }
 
     protected function createTaskFromPayload(array $taskData, Snapshot $snapshot): ?Task

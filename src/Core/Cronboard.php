@@ -47,7 +47,8 @@ class Cronboard implements Connectable
     public function loadSnapshot(Snapshot $snapshot)
     {
         $this->tasks = $snapshot->getTasks()->keyBy(function($task){
-            return $task->isRuntimeTask() ? $task->getOriginalTaskKey() : $task->getKey();
+            $shouldReplaceScheduled = $task->isSingleExecution() && $task->isRuntimeTask();
+            return $shouldReplaceScheduled ? $task->getOriginalTaskKey() : $task->getKey();
         });
         return $this;
     }

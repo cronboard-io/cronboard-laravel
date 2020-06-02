@@ -16,6 +16,7 @@ class Task
     protected $runtime;
     protected $single;
     protected $details;
+    protected $failed;
 
     public function __construct(string $key, Command $command, Parameters $parameters, array $constraints, bool $custom = false)
     {
@@ -26,6 +27,7 @@ class Task
         $this->custom = $custom;
         $this->runtime = false;
         $this->single = false;
+        $this->failed = false;
         $this->details = [];
     }
 
@@ -72,6 +74,16 @@ class Task
     public function isRuntimeTask(): bool
     {
         return $this->runtime;
+    }
+
+    public function setFailed()
+    {
+        $this->failed = true;
+    }
+
+    public function hasFailed(): bool
+    {
+        return $this->failed;
     }
 
     public function setSingleExecution(bool $single)

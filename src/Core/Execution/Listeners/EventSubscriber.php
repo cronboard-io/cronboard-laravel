@@ -67,6 +67,8 @@ abstract class EventSubscriber
         if (!$this->isTaskSupported($task)) return;
         try {
             if ($context = $this->enterTaskContext($task)) {
+                $task->setFailed();
+                $context->finalise();
                 $this->cronboard->fail($task, $exception);
             }
         } catch (Exception $e) {
@@ -97,8 +99,10 @@ abstract class EventSubscriber
 
         try {
             if ($context = $this->setTaskContext($task)) {
-                $context->finalise();
-                $this->cronboard->end($task);
+                if (! $task->hasFailed()) {
+                    $context->finalise();
+                    $this->cronboard->end($task);
+                }
             }
         } catch (Exception $e) {
             $this->cronboard->reportException($e);

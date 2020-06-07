@@ -58,7 +58,7 @@ class Task
 
     public function isCronboardTask(): bool
     {
-        return $this->custom;
+        return boolval($this->custom);
     }
 
     public function isApplicationTask(): bool
@@ -68,12 +68,12 @@ class Task
 
     public function isSingleExecution(): bool
     {
-        return $this->single;
+        return boolval($this->single);
     }
 
     public function isRuntimeTask(): bool
     {
-        return $this->runtime;
+        return boolval($this->runtime);
     }
 
     public function setFailed()

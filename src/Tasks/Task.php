@@ -56,24 +56,24 @@ class Task
         $this->custom = $custom;
     }
 
-    public function isCronboardTask(): bool
+    public function isCronboardTask(): ?bool
     {
-        return boolval($this->custom);
+        return $this->custom;
     }
 
-    public function isApplicationTask(): bool
+    public function isApplicationTask(): ?bool
     {
         return !$this->isCronboardTask();
     }
 
-    public function isSingleExecution(): bool
+    public function isSingleExecution(): ?bool
     {
-        return boolval($this->single);
+        return $this->single;
     }
 
-    public function isRuntimeTask(): bool
+    public function isRuntimeTask(): ?bool
     {
-        return boolval($this->runtime);
+        return $this->runtime;
     }
 
     public function setFailed()

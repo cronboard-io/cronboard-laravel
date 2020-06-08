@@ -2,6 +2,7 @@
 
 namespace Cronboard\Core\Api\Endpoints;
 
+use Carbon\Carbon;
 use Cronboard\Tasks\Task;
 use Cronboard\Tasks\TaskContext;
 
@@ -51,6 +52,7 @@ class Tasks extends Endpoint
             'key' => $task->getKey(),
             'context' => $context->getExecutionContext()->toArray(),
             'environment' => $context->getEnvironment()->toArray(),
+            'timestamp' => $this->getCurrentTimestamp()
         ];
         return $payload;
     }
@@ -63,9 +65,13 @@ class Tasks extends Endpoint
             'output' => $context->getOutput(),
             'metrics' => $context->getCollector()->toArray(),
             'exception' => $context->getException(),
+            'timestamp' => $this->getCurrentTimestamp()
         ];
         return $payload;
     }
 
-
+    protected function getCurrentTimestamp(): int
+    {
+        return Carbon::now()->timestamp;
+    }
 }

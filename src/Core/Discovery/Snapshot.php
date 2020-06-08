@@ -64,7 +64,7 @@ class Snapshot
         return $this->commands->filter(function($command) {
             return $command->isConsoleCommand();
         })->keyBy(function($command) {
-            return $command->resolveHandlerByContainer($this->container)->getName();
+            return $this->container->make($command->getHandler())->getName();
         });
     }
 
@@ -107,9 +107,8 @@ class Snapshot
     {
         $remoteTaskKeys = $remoteTasks->map->getKey();
 
-        // remove old remote tasks from the snapshot
-        $this->tasks = $this->tasks->merge($remoteTasks)->filter(function($task) use ($remoteTaskKeys) {
-            return $task->isApplicationTask() || $remoteTaskKeys->contains($task->getKey());
-        });
+        $this->tasks = $this->tasks->filter(function($task) use ($remoteTaskKeys) {
+            return $task->isApplicationTask();
+        })->merge($remoteTasks);
     }
 }

@@ -77,18 +77,27 @@ class LoadRemoteTasksIntoSchedule
         $command = $task->getCommand();
 
         try {
+            $event = null;
             switch ($command->getType()) {
                 case 'invokable':
-                    return ExecuteInvokableTask::create($task, $this->app)->attach($schedule);
+                    $event = ExecuteInvokableTask::create($task, $this->app)->attach($schedule);
+                    break;
                 case 'exec':
-                    return ExecuteExecTask::create($task, $this->app)->attach($schedule);
+                    $event = ExecuteExecTask::create($task, $this->app)->attach($schedule);
+                    break;
                 case 'job':
-                    return ExecuteJobTask::create($task, $this->app)->attach($schedule);
+                    $event = ExecuteJobTask::create($task, $this->app)->attach($schedule);
+                    break;
                 case 'command':
-                    return ExecuteCommandTask::create($task, $this->app)->attach($schedule);
+                    $event = ExecuteCommandTask::create($task, $this->app)->attach($schedule);
+                    break;
                 default:
-                    return null;
+                    $event = null;
             }
+            if ($event) {
+                $event->setRemoteEvent(true);
+            }
+            return $event;
         } catch (ModelNotFoundException $e) {
             $eventCreationException = new Exception($e->getMessage(), 0, $e);
             $this->cronboard->reportException($eventCreationException);

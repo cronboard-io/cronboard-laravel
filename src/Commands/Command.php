@@ -9,7 +9,6 @@ use Cronboard\Core\Reflection\Inspectors\InvokableCommandInspector;
 use Cronboard\Core\Reflection\Inspectors\JobCommandInspector;
 use Cronboard\Core\Reflection\Parameters;
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
@@ -114,19 +113,6 @@ class Command
     public function isJobCommand(): bool
     {
         return $this->type === 'job';
-    }
-
-    public function resolveHandlerByContainer(Container $container)
-    {
-        // try to resolve console commands from console kernel
-        if ($this->isConsoleCommand()) {
-            $consoleKernel = $container->make(Kernel::class);
-            $instance = Arr::get($consoleKernel->all(), $this->getAlias());
-            if ($instance) {
-                return $instance;
-            }
-        }
-        return $container->make($this->handler);
     }
 
     public function getKey()

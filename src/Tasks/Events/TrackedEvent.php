@@ -16,6 +16,8 @@ trait TrackedEvent
     protected $task;
     protected $cronboard;
 
+    protected $remote = false;
+
     protected $recordingOutputInTask = false;
 
     public function setCronboard(Cronboard $cronboard)
@@ -39,6 +41,16 @@ trait TrackedEvent
         $this->task = $task;
         $this->recordOutputInTask();
         return $this;
+    }
+
+    public function setRemoteEvent(bool $remote = true)
+    {
+        $this->remote = $remote;
+    }
+
+    public function isRemoteEvent(): ?bool
+    {
+        return $this->remote;
     }
 
     public function linkToCronboard(Cronboard $cronboard)

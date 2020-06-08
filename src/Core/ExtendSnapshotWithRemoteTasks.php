@@ -47,12 +47,12 @@ class ExtendSnapshotWithRemoteTasks
             $localScheduleTasks = $snapshot->getTasks();
 
             // get task aliases
-            $scheduleTasks = $localScheduleTasks->merge($remoteScheduleTasks);
+            $scheduleTasks = $localScheduleTasks->merge($remoteScheduleTasks->keyBy->getKey());
             $taskAliases = $response['aliases'] ?? [];
             $remoteTaskAliases = $this->createTasksFromTaskAliases($scheduleTasks, $taskAliases, $tasksPayload);
 
             // add remote tasks to snapshot
-            $remoteTasks = $scheduleTasks->merge($remoteTaskAliases);
+            $remoteTasks = $remoteScheduleTasks->merge($remoteTaskAliases);
             $snapshot->addRemoteTasks($remoteTasks);
 
             $this->storeSnapshot($snapshot);

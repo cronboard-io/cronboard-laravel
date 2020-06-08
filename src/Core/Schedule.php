@@ -67,7 +67,12 @@ class Schedule extends LaravelSchedule
     {
         if (!$this->ready && !empty($this->events)) {
             $events = [];
-            $eventsLocalFirst = array_reverse($this->events);
+
+            $groupedEvents = (new Collection($this->events))->groupBy(function($event) {
+                return $event->isRemoteEvent() ? 'remote' : 'local';
+            });
+            $eventsLocalFirst = $groupedEvents->get('local', new Collection)->merge($groupedEvents->get('remote', new Collection));
+
             foreach ($eventsLocalFirst as $event) {
                 $task = $event->loadTaskFromCronboard();
                 $key = empty($task) ? md5(uniqid() . $event->expression) : $task->getKey();

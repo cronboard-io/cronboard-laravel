@@ -45,7 +45,7 @@ class RecordCommand extends Command
         // exceptions are handled here because we want to notify users about any issues during recording
         $response = $endpoint->record(
             $snapshot->getCommands(),
-            $snapshot->getTasks(),
+            $snapshot->getTasksByKey(),
             (new Environment($this->laravel))->toArray()
         );
 

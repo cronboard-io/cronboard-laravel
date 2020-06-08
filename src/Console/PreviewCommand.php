@@ -36,7 +36,7 @@ class PreviewCommand extends Command
         $this->outputCommands($commands = $snapshot->getCommands());
         $this->info("A total of " . $commands->count() . ' Commands will be recorded by Cronboard.');
 
-        $this->outputTasks($tasks = $snapshot->getTasks());
+        $this->outputTasks($tasks = $snapshot->getTasksByKey());
         $this->info("A total of " . $tasks->count() . ' Tasks will be recorded by Cronboard.');
     }
 }

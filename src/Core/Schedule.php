@@ -67,7 +67,8 @@ class Schedule extends LaravelSchedule
     {
         if (!$this->ready && !empty($this->events)) {
             $events = [];
-            foreach ($this->events as $event) {
+            $eventsLocalFirst = array_reverse($this->events);
+            foreach ($eventsLocalFirst as $event) {
                 $task = $event->loadTaskFromCronboard();
                 $key = empty($task) ? md5(uniqid() . $event->expression) : $task->getKey();
                 $events[$key] = $event;

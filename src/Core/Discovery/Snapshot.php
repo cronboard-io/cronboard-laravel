@@ -68,9 +68,14 @@ class Snapshot
         });
     }
 
-    public function getTasks(): Collection
+    public function getTasksByKey(): Collection
     {
         return $this->tasks->keyBy->getKey();
+    }
+
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
     }
 
     public function toArray(): array

@@ -66,9 +66,7 @@ class DiscoverTasksViaScheduler
                 $task = $this->createTaskFromCommand($command, $scheduleArguments, $constraints, $event, $eventData);
             }
             return $task ?? null;
-        })->filter()->keyBy(function($task) {
-            return $task->getKey();
-        });
+        })->filter();
 
         // swap back to original connectable
         $this->app['cronboard.connector']->restore();

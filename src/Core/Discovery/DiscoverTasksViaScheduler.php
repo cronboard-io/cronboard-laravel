@@ -92,7 +92,11 @@ class DiscoverTasksViaScheduler
         $command = $this->commandBuilder->fromScheduler($eventData);
         if ($command && ($command instanceof CommandByAlias)) {
             $consoleCommandClass = $this->getConsoleCommandByAlias($command);
+            
             if ($consoleCommandClass) {
+                if ($this->shouldIgnoreClass($consoleCommandClass)) {
+                    return null;
+                }
                 $command = $this->commandBuilder->fromClass($consoleCommandClass);
             }
         }

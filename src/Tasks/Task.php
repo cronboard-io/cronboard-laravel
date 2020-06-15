@@ -121,12 +121,13 @@ class Task
         return $this->originalTaskKey;
     }
 
-    public function aliasAsRuntimeInstance(string $key, bool $single = false)
+    public function aliasAsRuntimeInstance(string $key, bool $single = false, Parameters $parameters = null)
     {
         return $this->aliasAsTaskInstance($key, [
             'custom' => true,
             'runtime' => true,
-            'single' => $single
+            'single' => $single,
+            'parameters' => $parameters ?: $this->parameters
         ]);
     }
 

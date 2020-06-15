@@ -78,7 +78,10 @@ class ExtendSnapshotWithRemoteTasks
                 $task = $availableTasksByKey->get($taskKey);
                 if (! empty($task)) {
                     $taskData = $tasksPayloadByKey[$aliasedKey] ?? ($tasksPayloadByKey[$taskKey] ?? null);
-                    $aliasedTask = $task->aliasAsRuntimeInstance($aliasedKey, $taskData['once'] ?? false);
+
+                    $parameters = (new ParseParameters)->execute($taskData['parameters']);
+                    $aliasedTask = $task->aliasAsRuntimeInstance($aliasedKey, $taskData['once'] ?? false, $parameters);
+
                     return $aliasedTask;
                 }
                 return null;

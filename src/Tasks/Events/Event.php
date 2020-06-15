@@ -48,9 +48,6 @@ class Event extends SchedulingEvent
             );
         }
 
-        $process = new Process(
-            $this->buildCommand(), base_path(), $this->getProcessEnvironment(), null, null
-        );
         return $process->run();
     }
 

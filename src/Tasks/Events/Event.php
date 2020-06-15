@@ -36,6 +36,18 @@ class Event extends SchedulingEvent
 
     protected function runAsProcess()
     {
+        $process = null;
+
+        if (method_exists(Process::class, 'fromShellCommandline')) {
+            $process = Process::fromShellCommandline(
+                $this->buildCommand(), base_path(), $this->getProcessEnvironment(), null, null
+            );
+        } else {
+            $process = new Process(
+                $this->buildCommand(), base_path(), $this->getProcessEnvironment(), null, null
+            );
+        }
+
         $process = new Process(
             $this->buildCommand(), base_path(), $this->getProcessEnvironment(), null, null
         );

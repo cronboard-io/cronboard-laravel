@@ -37,6 +37,11 @@ class RecordCommand extends Command
             return 1;
         }
 
+        if (! $this->getCronboard()->booted()) {
+            $this->error('Cronboard is disabled. Please enable it in `config\\cronboard.php` to record your schedule.');
+            return 1;
+        }
+
         // force refresh of commands
         $snapshot = (new DiscoverCommandsAndTasks($this->laravel))->getNewSnapshotAndStore();
 

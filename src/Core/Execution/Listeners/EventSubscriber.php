@@ -66,7 +66,7 @@ abstract class EventSubscriber
         if (empty($task)) return;
         if (!$this->isTaskSupported($task)) return;
         try {
-            if ($context = $this->enterTaskContext($task)) {
+            if ($context = $this->setTaskContext($task)) {
                 $task->setFailed();
                 $context->finalise();
                 $this->cronboard->fail($task, $exception);

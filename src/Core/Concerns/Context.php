@@ -33,17 +33,26 @@ trait Context
     public function setTaskContextWhenTracked(Task $task = null): ?TaskContext
     {
         if ($context = $this->setTaskContext($task)) {
-            if (!$context->isTracked()) {
-                $context->exit();
-                $this->setTaskContext($context = null);
-            }
+            return $this->forwardTrackedContext($context);
         }
-        return $context;
+        return null;
     }
 
     public function getTrackedContextForTask(Task $task): ?TaskContext
     {
-        return $this->getContext() ?: $this->setTaskContextWhenTracked($task);
+        if ($context = $this->getContext()) {
+            return $this->forwardTrackedContext($context);
+        }
+        return $this->setTaskContextWhenTracked($task);
+    }
+
+    private function forwardTrackedContext(TaskContext $context): ?TaskContext
+    {
+        if (! $context->isTracked()) {
+            $context->exit();
+            return $this->setTaskContext(null);
+        }
+        return $context;
     }
 
     protected function loadCurrentTaskContextFromEnvironment(): ?TaskContext

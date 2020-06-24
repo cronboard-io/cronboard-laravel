@@ -52,7 +52,7 @@ class OutputModule extends Module
         $this->outputSource = $this->getEventOutput($event);
     }
 
-    public function getOutput()
+    public function getOutput(): ?string
     {
         return $this->output;
     }

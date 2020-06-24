@@ -19,6 +19,30 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use ReflectionClass;
 
+/**
+* @method void setOnce($once = true)
+* @method void setActive($active = true)
+* @method void setTracking($tracking = true)
+* @method bool isTracked()
+* @method bool isActive()
+* @method bool shouldExecuteImmediately()
+*
+* @method void setOverrides(array $overrides = [])
+* @method Collection getExecutionContext()
+*
+* @method void report($key, $value)
+* @method array getReport()
+*
+* @method void readsOutputFromEvent(Event $event)
+* @method ?string getOutput()
+*
+* @method Collector getCollector()
+*
+* @method void setException(Exception $exception)
+* @method ?Exception getException()
+*
+* @method Environment getEnvironment()
+*/
 class TaskContext implements Arrayable
 {
     protected $container;

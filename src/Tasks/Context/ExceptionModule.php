@@ -48,7 +48,7 @@ class ExceptionModule extends Module
         ];
     }
 
-    public function getException()
+    public function getException(): ?Exception
     {
         return $this->exception;
     }

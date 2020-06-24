@@ -20,7 +20,7 @@ trait Boot
 
     protected $commandsWithRemoteAccess = ['schedule:run', 'schedule:finish'];
 
-    protected function ready(): bool
+    public function ready(): bool
     {
         return $this->config->getEnabled() && $this->config->hasToken();
     }
@@ -63,7 +63,7 @@ trait Boot
     public function allowRemoteAccessForCommand($command)
     {
         $commandToAdd = null;
-        
+
         if ($command instanceof Command) {
             $commandToAdd = $command->getName();
         } else if (is_string($command)) {

@@ -37,7 +37,7 @@ class RecordCommand extends Command
             return 1;
         }
 
-        if (! $this->getCronboard()->booted()) {
+        if (! $this->isCronboardEnabled()) {
             $this->error('Cronboard is disabled. Please enable it in `config\\cronboard.php` to record your schedule.');
             return 1;
         }

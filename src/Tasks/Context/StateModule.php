@@ -10,9 +10,9 @@ class StateModule extends Module
 
     public function load(array $data)
     {
-        $this->tracking = $data['tracking'] ?? true;
-        $this->active = $data['active'] ?? true;
-        $this->once = $data['once'] ?? false;
+        $this->tracking = array_key_exists('tracking', $data) ? $data['tracking'] : true;
+        $this->active = array_key_exists('active', $data) ? $data['active'] : true;
+        $this->once = array_key_exists('once', $data) ? $data['once'] : false;
     }
 
     public function toArray(): array

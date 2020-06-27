@@ -33,12 +33,12 @@ class RecordCommand extends Command
      */
     public function handle()
     {
-        if (!$this->validateCronboardConfiguration()) {
-            return 1;
-        }
-
         if (! $this->isCronboardEnabled()) {
             $this->error('Cronboard is disabled. Please enable it in `config\\cronboard.php` to record your schedule.');
+            return 0;
+        }
+
+        if (! $this->validateCronboardConfiguration()) {
             return 1;
         }
 

@@ -11,7 +11,6 @@ use ReflectionClass;
 
 trait Tracking
 {
-    abstract protected function ensureHasBooted(): bool;
     abstract protected function ready(): bool;
 
     public function connect(LaravelSchedule $schedule, bool $unplug = false): LaravelSchedule
@@ -20,27 +19,11 @@ trait Tracking
             return $schedule;
         }
 
-        if (!$this->ready()) {
+        if (! $this->ready()) {
             return $schedule;
         }
 
-        $this->ensureHasBooted();
-
-        $eventsLoaded = false;
-        $isDefaultSchedule = get_class($schedule) === LaravelSchedule::class;
-
-        if ($isDefaultSchedule || $unplug) {
-            $eventsLoaded = !empty($schedule->events());
-        }
-
-        $instance = $this->getCronboardScheduleInstance($unplug);
-        $cronboardEventsLoaded = !empty($instance->events());
-
-        if ($eventsLoaded && !$cronboardEventsLoaded) {
-            $this->loadEventsInSchedule($instance);
-        }
-
-        return $instance;
+        return $this->getCronboardScheduleInstanceWithLocalEvents($schedule, $unplug);
     }
 
     public function dontTrack(LaravelSchedule $schedule, Closure $scheduleGroup = null): LaravelSchedule
@@ -49,6 +32,25 @@ trait Tracking
             $scheduleGroup($schedule);
         }
         return $schedule;
+    }
+
+    private function getCronboardScheduleInstanceWithLocalEvents(LaravelSchedule $currentSchedule, bool $refreshInstance = false): Schedule
+    {
+        $eventsLoaded = false;
+        $isDefaultSchedule = get_class($currentSchedule) === LaravelSchedule::class;
+
+        if ($isDefaultSchedule || $refreshInstance) {
+            $eventsLoaded = $isDefaultSchedule ? ! empty($currentSchedule->events()) : $currentSchedule->hasEvents();
+        }
+
+        $instance = $this->getCronboardScheduleInstance($refreshInstance);
+        $cronboardEventsLoaded = $instance->hasEvents();
+
+        if ($eventsLoaded && ! $cronboardEventsLoaded) {
+            $this->loadEventsInSchedule($instance);
+        }
+
+        return $instance;
     }
 
     private function loadEventsInSchedule(Schedule $schedule)

@@ -10,12 +10,14 @@ use Cronboard\Core\Execution\ExecuteExecTask;
 use Cronboard\Core\Execution\ExecuteInvokableTask;
 use Cronboard\Core\Execution\ExecuteJobTask;
 use Cronboard\Core\Schedule as CronboardSchedule;
+use Cronboard\Integrations\Integrations;
 use Cronboard\Support\CommandContext;
 use Cronboard\Tasks\Task;
 use Illuminate\Console\Scheduling\CallbackEvent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Collection;
 
 /**
  * Get remotely loaded tasks from the snapshot and attach them to the console schedule.
@@ -24,6 +26,8 @@ class LoadRemoteTasksIntoSchedule
 {
     protected $app;
     protected $cronboard;
+
+    static $loadedTasks = [];
 
     public function __construct(Container $app)
     {
@@ -36,23 +40,45 @@ class LoadRemoteTasksIntoSchedule
         $commandContext = new CommandContext($this->app);
 
         // if we're not running the schedule - no need to load remote commands
-
-        if (!$commandContext->isConsoleCommandContext('schedule:run')) {
+        if (! $commandContext->inCommandsContext($this->getScheduleRunCommands())) {
             return $schedule;
         }
 
         // cronboard has not been boostrapped and we ignore pulling remote tasks
-        if (!($schedule instanceof CronboardSchedule)) {
+        if (! ($schedule instanceof CronboardSchedule)) {
             return $schedule;
         }
 
         $customTasks = $this->cronboard->getTasks()->filter->isCronboardTask();
 
         foreach ($customTasks as $customTask) {
-            $event = $this->addTaskToSchedule($schedule, $customTask);
+            if (! $this->isLoaded($schedule, $customTask)) {
+                $this->addTaskToSchedule($schedule, $customTask);
+                $this->rememberAsLoaded($schedule, $customTask);
+            }
         }
 
         return $schedule;
+    }
+
+    protected function getScheduleRunCommands(): Collection
+    {
+        return (new Collection(['schedule:run', 'schedule:finish']))
+            ->merge(Integrations::getAdditionalScheduleCommands());
+    }
+
+    protected function isLoaded(Schedule $schedule, Task $task)
+    {
+        $key = spl_object_id($schedule);
+        return in_array($task->getKey(), static::$loadedTasks[$key] ?? []);
+    }
+
+    protected function rememberAsLoaded(Schedule $schedule, Task $task)
+    {
+        $key = spl_object_id($schedule);
+        $loadedTasks = static::$loadedTasks[$key] ?? [];
+        $loadedTasks[] = $task->getKey();
+        static::$loadedTasks[$key] = $loadedTasks;
     }
 
     protected function addTaskToSchedule(Schedule $schedule, Task $task)

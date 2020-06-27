@@ -18,7 +18,6 @@ trait Context
 
     public function getContext(): ?TaskContext
     {
-        $this->ensureHasBooted();
         return $this->context;
     }
 

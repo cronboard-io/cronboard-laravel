@@ -3,6 +3,7 @@
 namespace Cronboard\Support;
 
 use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Collection;
 use Symfony\Component\Console\Input\ArgvInput;
 
 class CommandContext
@@ -14,9 +15,9 @@ class CommandContext
         $this->app = $app;
     }
 
-    public function isConsoleCommandContext(string $command): bool
+    public function inCommandContext(string $command, bool $runningInConsole = null): bool
     {
-        if (!$this->app->runningInConsole()) {
+        if (is_null($runningInConsole) && ! $this->app->runningInConsole()) {
             return false;
         }
 
@@ -25,8 +26,36 @@ class CommandContext
             $commandName = $this->app->make($command)->getName();
         }
 
-        $consoleCommandNameArgument = (new ArgvInput)->getFirstArgument();
+        $consoleCommandName = $this->getConsoleCommandName();
 
-        return $commandName === $consoleCommandNameArgument;
+        return $commandName === $consoleCommandName;
+    }
+
+    public function inCommandsContext(Collection $commands): bool
+    {
+        $runningInConsole = $this->app->runningInConsole();
+
+        if (! $runningInConsole) {
+            return false;
+        }
+
+        foreach ($commands as $command) {
+            if ($this->inCommandContext($command, $runningInConsole)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function getConsoleCommandName(): ?string
+    {
+        static $commandName = null;
+
+        if (is_null($commandName)) {
+            $commandName = (new ArgvInput)->getFirstArgument();
+        }
+
+        return $commandName;
     }
 }

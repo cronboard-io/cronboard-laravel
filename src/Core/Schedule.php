@@ -22,7 +22,6 @@ class Schedule extends LaravelSchedule
     protected $cronboard;
     protected $app;
 
-    protected $loadedTasks;
     protected $ready;
 
     public function __construct($timezone = null)
@@ -33,7 +32,6 @@ class Schedule extends LaravelSchedule
         $this->app = $container;
         $this->cronboard = $container['cronboard'];
 
-        $this->loadedTasks = [];
         $this->ready = false;
     }
 
@@ -73,11 +71,21 @@ class Schedule extends LaravelSchedule
         return ! empty($this->events);
     }
 
+    public function resetLoadedEvents()
+    {
+        $this->events = array_filter($this->events, function($event) {
+            return ! $event->isRemoteEvent();
+        });
+
+        $this->ready = false;
+    }
+
     protected function prepare(Container $app)
     {
         $this->cronboard->boot();
 
         if (! $this->ready) {
+
             (new LoadRemoteTasksIntoSchedule($app))->execute($this);
 
             if (! empty($this->events)) {

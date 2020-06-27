@@ -28,7 +28,7 @@ class DiscoverCommandsAndTasks
         $snapshot = $this->loadSnapshot();
 
         // if snapshot contains invalid information - we force a rebuild
-        if (!empty($snapshot) && !$snapshot->validate()) {
+        if (! empty($snapshot) && ! $snapshot->validate()) {
             $snapshot = null;
         }
 
@@ -86,7 +86,7 @@ class DiscoverCommandsAndTasks
     protected function loadSnapshot(): ?Snapshot
     {
         $data = $this->getStorage()->get($this->getSnapshotKey());
-        if (!empty($data)) {
+        if (! empty($data)) {
             return Snapshot::fromArray($this->app, $data);
         }
         return null;

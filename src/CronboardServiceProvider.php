@@ -16,7 +16,6 @@ use Cronboard\Core\Execution\Listeners\CommandEventSubscriber;
 use Cronboard\Core\Execution\Listeners\ExecEventSubscriber;
 use Cronboard\Core\Execution\Listeners\JobEventSubscriber;
 use Cronboard\Facades\Cronboard as CronboardFacade;
-use Cronboard\Integrations\Cronless;
 use Cronboard\Integrations\Integrations;
 use Cronboard\Runtime;
 use Cronboard\Support\FrameworkInformation;
@@ -59,7 +58,7 @@ class CronboardServiceProvider extends ServiceProvider
                 $this->app['cronboard']->boot();
             });
 
-            Event::listen(ArtisanStarting::class, function(ArtisanStarting $event) {
+            Event::listen(ArtisanStarting::class, function() {
                 $this->app['cronboard']->boot();
             });
 

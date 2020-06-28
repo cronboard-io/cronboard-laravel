@@ -48,6 +48,10 @@ class Event extends SchedulingEvent
             );
         }
 
+        if (method_exists($process, 'inheritEnvironmentVariables')) {
+            $process->inheritEnvironmentVariables();
+        }
+
         return $process->run();
     }
 

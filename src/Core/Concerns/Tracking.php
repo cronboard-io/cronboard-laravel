@@ -40,7 +40,7 @@ trait Tracking
         $isDefaultSchedule = get_class($currentSchedule) === LaravelSchedule::class;
 
         if ($isDefaultSchedule || $refreshInstance) {
-            $eventsLoaded = $isDefaultSchedule ? ! empty($currentSchedule->events()) : $currentSchedule->hasEvents();
+            $eventsLoaded = $currentSchedule instanceof Schedule ? $currentSchedule->hasEvents() : ! empty($currentSchedule->events());
         }
 
         $instance = $this->getCronboardScheduleInstance($refreshInstance);

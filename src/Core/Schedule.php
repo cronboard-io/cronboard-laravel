@@ -4,6 +4,8 @@ namespace Cronboard\Core;
 
 use Closure;
 use Cronboard\Core\Exceptions\Exception;
+use Cronboard\Core\LoadRemoteTasksIntoSchedule;
+use Cronboard\Integrations\Integrations;
 use Cronboard\Tasks\Events\CallbackEvent;
 use Cronboard\Tasks\Events\Event;
 use Cronboard\Tasks\Task;
@@ -18,8 +20,8 @@ class Schedule extends LaravelSchedule
     protected $insideEventScope = false;
 
     protected $cronboard;
+    protected $app;
 
-    protected $loadedTasks;
     protected $ready;
 
     public function __construct($timezone = null)
@@ -27,8 +29,9 @@ class Schedule extends LaravelSchedule
         parent::__construct($timezone);
         $container = Container::getInstance();
 
+        $this->app = $container;
         $this->cronboard = $container['cronboard'];
-        $this->loadedTasks = [];
+
         $this->ready = false;
     }
 
@@ -63,23 +66,44 @@ class Schedule extends LaravelSchedule
         return $event;
     }
 
-    protected function prepare()
+    public function hasEvents(): bool
     {
-        if (!$this->ready && !empty($this->events)) {
-            $events = [];
+        return ! empty($this->events);
+    }
 
-            $groupedEvents = (new Collection($this->events))->groupBy(function($event) {
-                return $event->isRemoteEvent() ? 'remote' : 'local';
-            });
-            $eventsLocalFirst = $groupedEvents->get('local', new Collection)->merge($groupedEvents->get('remote', new Collection));
+    public function resetLoadedEvents()
+    {
+        $this->events = array_filter($this->events, function($event) {
+            return ! $event->isRemoteEvent();
+        });
 
-            foreach ($eventsLocalFirst as $event) {
-                $task = $event->loadTaskFromCronboard();
-                $key = empty($task) ? md5(uniqid() . $event->expression) : $task->getKey();
-                $events[$key] = $event;
+        $this->ready = false;
+    }
+
+    protected function prepare(Container $app)
+    {
+        $this->cronboard->boot();
+
+        if (! $this->ready) {
+
+            (new LoadRemoteTasksIntoSchedule($app))->execute($this);
+
+            if (! empty($this->events)) {
+                $events = [];
+
+                $groupedEvents = (new Collection($this->events))->groupBy(function($event) {
+                    return $event->isRemoteEvent() ? 'remote' : 'local';
+                });
+                $eventsLocalFirst = $groupedEvents->get('local', new Collection)->merge($groupedEvents->get('remote', new Collection));
+
+                foreach ($eventsLocalFirst as $event) {
+                    $task = $event->loadTaskFromCronboard();
+                    $key = empty($task) ? md5(uniqid() . $event->expression) : $task->getKey();
+                    $events[$key] = $event;
+                }
+                $this->events = array_values($events);
+                $this->ready = true;
             }
-            $this->events = array_values($events);
-            $this->ready = true;
         }
     }
 
@@ -91,7 +115,8 @@ class Schedule extends LaravelSchedule
      */
     public function dueEvents($app)
     {
-        $this->prepare();
+        Integrations::onDueEvents($this, $app);
+        $this->prepare($app);
         return parent::dueEvents($app);
     }
 
@@ -102,7 +127,7 @@ class Schedule extends LaravelSchedule
      */
     public function events()
     {
-        $this->prepare();
+        $this->prepare($this->app);
         return parent::events();
     }
 

@@ -15,12 +15,14 @@ use Cronboard\Core\Execution\Listeners\CallableEventSubscriber;
 use Cronboard\Core\Execution\Listeners\CommandEventSubscriber;
 use Cronboard\Core\Execution\Listeners\ExecEventSubscriber;
 use Cronboard\Core\Execution\Listeners\JobEventSubscriber;
-use Cronboard\Core\LoadRemoteTasksIntoSchedule;
 use Cronboard\Facades\Cronboard as CronboardFacade;
+use Cronboard\Integrations\Cronless;
+use Cronboard\Integrations\Integrations;
 use Cronboard\Runtime;
 use Cronboard\Support\FrameworkInformation;
 use Cronboard\Support\Signing\Verifier;
 use Cronboard\Tasks\Task;
+use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Console\Kernel;
@@ -57,6 +59,10 @@ class CronboardServiceProvider extends ServiceProvider
                 $this->app['cronboard']->boot();
             });
 
+            Event::listen(ArtisanStarting::class, function(ArtisanStarting $event) {
+                $this->app['cronboard']->boot();
+            });
+
             $listeners = [
                 JobEventSubscriber::class,
                 CommandEventSubscriber::class,
@@ -85,10 +91,6 @@ class CronboardServiceProvider extends ServiceProvider
 
     protected function hookIntoContainer()
     {
-        $this->app->resolving(Schedule::class, function($schedule) {
-            (new LoadRemoteTasksIntoSchedule($this->app))->execute($schedule);
-        });
-
         if ($this->getLaravelVersionAsInteger() < 5520) {
             // Laravel 5.5
             // force console kernel to add booting callback

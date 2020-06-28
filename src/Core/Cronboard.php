@@ -72,7 +72,6 @@ class Cronboard implements Connectable
 
     public function getTaskByKey(string $key): ?Task
     {
-        $this->ensureHasBooted();
         return $this->getTasks()->get($key);
     }
 

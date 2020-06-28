@@ -8,7 +8,11 @@ use Cronboard\Core\Config\ConfigurationException;
 use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
 use Cronboard\Core\Discovery\Snapshot;
 use Cronboard\Core\ExtendSnapshotWithRemoteTasks;
+use Cronboard\Support\CommandContext;
+use Cronboard\Integrations\Integrations;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
+use Log;
 
 trait Boot
 {
@@ -18,7 +22,7 @@ trait Boot
     protected $booting = false;
     protected $offline = false;
 
-    protected $commandsWithRemoteAccess = ['schedule:run', 'schedule:finish'];
+    protected $commandsWithRemoteAccess = [];
 
     public function ready(): bool
     {
@@ -77,18 +81,22 @@ trait Boot
 
     private function shouldContactRemote(Snapshot $snapshot): bool
     {
-        if ($this->app->runningInConsole()) {
-            $commandName = $_SERVER['argv'][1] ?? null;
-            return !empty($commandName) && $this->commandNeedsRemoteTasks($commandName, $snapshot);
-        }
-        return true;
+        if (! $this->app->runningInConsole()) return true;
+
+        $commandsWithRemoteAccess = $this->getCommandsWithRemoteAccess($snapshot);
+        $commandContext = new CommandContext($this->app);
+
+        return $commandContext->inCommandsContext($commandsWithRemoteAccess);
     }
 
-    private function commandNeedsRemoteTasks(string $commandName, Snapshot $snapshot): bool
+    private function getCommandsWithRemoteAccess(Snapshot $snapshot): Collection
     {
         $acceptedConsoleCommands = $snapshot->getCommands()->filter->isConsoleCommand()->map->getAlias();
-        $acceptedConsoleCommands = $acceptedConsoleCommands->merge($this->commandsWithRemoteAccess);
-        return $acceptedConsoleCommands->contains($commandName);
+
+        return $acceptedConsoleCommands
+            ->merge(['schedule:run', 'schedule:finish'])
+            ->merge($this->commandsWithRemoteAccess)
+            ->merge(Integrations::getAdditionalScheduleCommands());
     }
 
     private function setOffline(bool $offline)
@@ -112,6 +120,6 @@ trait Boot
     public function setOfflineDueTo(Exception $e)
     {
         $this->setOffline(true);
-        \Log::warning($e->getMessage());
+        Log::warning($e->getMessage());
     }
 }

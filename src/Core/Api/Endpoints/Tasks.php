@@ -62,7 +62,6 @@ class Tasks extends Endpoint
         $payload = [
             'key' => $task->getKey(),
             'report' => $context->getReport(),
-            'output' => $context->getOutput(),
             'metrics' => $context->getCollector()->toArray(),
             'exception' => $context->getException(),
             'timestamp' => $this->getCurrentTimestamp()

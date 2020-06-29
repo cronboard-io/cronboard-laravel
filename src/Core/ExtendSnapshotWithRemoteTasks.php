@@ -96,10 +96,10 @@ class ExtendSnapshotWithRemoteTasks
 
     protected function loadTaskContext(Collection $tasksPayload, array $taskAliases)
     {
+        $contextStorage = TaskContext::getStorage($this->app);
+        $contextStorage->empty();
+
         $tasksPayloadByKey = $tasksPayload->keyBy('key');
-        foreach ($taskAliases as $aliasedTaskKey => $taskKey) {
-            $tasksPayloadByKey[$aliasedTaskKey] = $tasksPayloadByKey[$aliasedTaskKey] ?? ($tasksPayloadByKey[$taskKey] ?? []);
-        }
 
         $defaultContext = [
             'silent' => 0,
@@ -114,6 +114,10 @@ class ExtendSnapshotWithRemoteTasks
             $context->setActive($taskData['active']);
             $context->setOnce($taskData['once']);
             $context->setOverrides($taskData['overrides'] ?? []);
+        }
+
+        foreach ($taskAliases as $aliasedTaskKey => $taskKey) {
+            TaskContext::inheritTaskContext($this->app, $aliasedTaskKey, $taskKey);
         }
     }
 

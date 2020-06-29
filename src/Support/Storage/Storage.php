@@ -15,21 +15,21 @@ class Storage
 
     public function store(string $key, $value)
     {
-        $this->cache->forever($this->key($key), $value);
+        $this->cache->forever($key, $value);
     }
 
     public function get(string $key, $default = null)
     {
-        return $this->cache->get($this->key($key), $default);
+        return $this->cache->get($key, $default);
     }
 
     public function remove(string $key)
     {
-        return $this->cache->forget($this->key($key));
+        return $this->cache->forget($key);
     }
 
-    private function key(string $key): string
+    public function empty()
     {
-        return 'cronboard.tasks.' . $key;
+        // TODO: remove all storage
     }
 }

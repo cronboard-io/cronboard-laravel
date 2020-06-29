@@ -114,7 +114,7 @@ trait TrackedEvent
             $this->ensureOutputIsBeingCapturedForEmail(); // Laravel 5.6
         }
 
-        if (!$this->recordingOutputInTask) {
+        if (! $this->recordingOutputInTask) {
             $this->recordingOutputInTask = true;
 
             $task = $this->task;

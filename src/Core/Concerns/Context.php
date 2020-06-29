@@ -21,6 +21,11 @@ trait Context
         return $this->context;
     }
 
+    public function getTaskContextByKey(string $key): ?TaskContext
+    {
+        return TaskContext::fromTaskKey($this->app, $key);;
+    }
+
     public function setTaskContext(Task $task = null): ?TaskContext
     {
         if (!empty($task)) {
@@ -48,7 +53,7 @@ trait Context
     private function forwardTrackedContext(TaskContext $context): ?TaskContext
     {
         if (! $context->isTracked()) {
-            $context->exit();
+            $context->exitAndKeep();
             return $this->setTaskContext(null);
         }
         return $context;

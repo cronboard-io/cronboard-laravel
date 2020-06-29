@@ -8,7 +8,6 @@ use Cronboard\Support\Storage\Storage;
 use Cronboard\Tasks\Context\CollectorModule;
 use Cronboard\Tasks\Context\EnvironmentModule;
 use Cronboard\Tasks\Context\ExceptionModule;
-use Cronboard\Tasks\Context\OutputModule;
 use Cronboard\Tasks\Context\OverridesModule;
 use Cronboard\Tasks\Context\ReportModule;
 use Cronboard\Tasks\Context\StateModule;
@@ -32,9 +31,6 @@ use ReflectionClass;
 *
 * @method void report($key, $value)
 * @method array getReport()
-*
-* @method void readsOutputFromEvent(Event $event)
-* @method ?string getOutput()
 *
 * @method Collector getCollector()
 *
@@ -60,7 +56,6 @@ class TaskContext implements Arrayable
             StateModule::class,
             OverridesModule::class,
             ReportModule::class,
-            OutputModule::class,
             CollectorModule::class,
             ExceptionModule::class,
             EnvironmentModule::class,
@@ -75,14 +70,38 @@ class TaskContext implements Arrayable
         });
         $this->hooks = $this->modules->map->getHooks();
 
-        $this->storage = new Storage($container);
+        $this->storage = static::getStorage($container);
 
         $this->load();
     }
 
+    public static function getStorage(Container $container)
+    {
+        static $storage = null;
+
+        if (is_null($storage)) {
+            $storage = new Storage($container);
+        }
+
+        return $storage;
+    }
+
+    public static function inheritTaskContext(Container $container, string $childKey, string $parentKey): TaskContext
+    {
+        $context = static::fromTaskKey($container, $childKey);
+        $context->load($parentKey);
+        $context->store();
+        return $context;
+    }
+
+    public static function fromTaskKey(Container $container, string $key)
+    {
+        return new static($container, $key);
+    }
+
     public static function fromTask(Container $container, Task $task)
     {
-        return new static($container, $task->getKey());
+        return static::fromTaskKey($container, $task->getKey());
     }
 
     public function getTask(): string
@@ -133,16 +152,23 @@ class TaskContext implements Arrayable
         return $this;
     }
 
-    public function exit(): TaskContext
+    public function exit(bool $keep = false): TaskContext
     {
         $this->entered = false;
         $this->notify('onContextExit');
 
         $this->store();
 
-        $this->destroy();
+        if (! $keep) {
+            $this->destroy();
+        }
 
         return $this;
+    }
+
+    public function exitAndKeep(): TaskContext
+    {
+        return $this->exit(true);
     }
 
     public function toArray()
@@ -150,6 +176,8 @@ class TaskContext implements Arrayable
         $array = $this->modules->keyBy(function($module) {
             return $this->getModuleKey($module);
         })->map->toArray();
+
+        $array['task'] = $this->task;
 
         return $array;
     }
@@ -171,9 +199,9 @@ class TaskContext implements Arrayable
         return (new ReflectionClass($module))->getShortName();
     }
 
-    private function load()
+    private function load(string $taskKey = null)
     {
-        $data = $this->storage->get($this->getKey());
+        $data = $this->storage->get($taskKey ? $this->buildKey($taskKey) : $this->getKey());
 
         $this->modules->each(function($module) use ($data) {
             $module->load(Arr::get($data, $this->getModuleKey($module)) ?: []);
@@ -187,6 +215,11 @@ class TaskContext implements Arrayable
 
     private function getKey(): string
     {
-        return 'cronboard.tasks.' . $this->task;
+        return $this->buildKey($this->task);
+    }
+
+    private function buildKey(string $key): string
+    {
+        return 'cronboard.tasks.' . $key;
     }
 }

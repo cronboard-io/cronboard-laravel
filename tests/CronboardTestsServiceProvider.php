@@ -3,8 +3,10 @@
 namespace Cronboard\Tests;
 
 use Cronboard\Core\Config\Configuration;
+use Cronboard\Support\Storage\Storage;
 use Cronboard\Tests\Stubs\ContextRecordCommand;
 use Cronboard\Tests\Stubs\CronboardTestCommand;
+use Cronboard\Tests\Support\TestStorage;
 use Illuminate\Support\ServiceProvider;
 
 class CronboardTestsServiceProvider extends ServiceProvider
@@ -34,5 +36,7 @@ class CronboardTestsServiceProvider extends ServiceProvider
         $configuration = new Configuration($this->app, $configArray);
 
         $this->app['cronboard']->loadConfiguration($configuration);
+
+        $this->app->instance(Storage::class, new TestStorage);
     }
 }

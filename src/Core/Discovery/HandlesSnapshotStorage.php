@@ -14,7 +14,7 @@ trait HandlesSnapshotStorage
 
     protected function getStorage()
     {
-        return new Storage($this->app);
+        return $this->app->make(Storage::class);
     }
 
     protected function getSnapshotKey(): string

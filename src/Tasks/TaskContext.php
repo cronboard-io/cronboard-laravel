@@ -77,13 +77,7 @@ class TaskContext implements Arrayable
 
     public static function getStorage(Container $container)
     {
-        static $storage = null;
-
-        if (is_null($storage)) {
-            $storage = new Storage($container);
-        }
-
-        return $storage;
+        return $container->make(Storage::class);
     }
 
     public static function inheritTaskContext(Container $container, string $childKey, string $parentKey): TaskContext

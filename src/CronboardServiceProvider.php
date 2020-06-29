@@ -20,6 +20,8 @@ use Cronboard\Integrations\Integrations;
 use Cronboard\Runtime;
 use Cronboard\Support\FrameworkInformation;
 use Cronboard\Support\Signing\Verifier;
+use Cronboard\Support\Storage\CacheStorage;
+use Cronboard\Support\Storage\Storage;
 use Cronboard\Tasks\Task;
 use Illuminate\Console\Events\ArtisanStarting;
 use Illuminate\Console\Scheduling\Schedule;
@@ -116,6 +118,8 @@ class CronboardServiceProvider extends ServiceProvider
 
         $this->registerConfiguration($this->app);
 
+        $this->registerStorage($this->app);
+
         $this->registerClient($this->app);
 
         $this->registerResponseVerifier($this->app);
@@ -138,6 +142,20 @@ class CronboardServiceProvider extends ServiceProvider
     {
         $configuration = new Configuration($app, $app->config['cronboard']);
         $app->instance(Configuration::class, $configuration);
+
+        return $this;
+    }
+
+    /**
+     * Register the Cronboard storage
+     * @param  Container $app
+     * @return void
+     */
+    public function registerStorage(Container $app)
+    {
+        if (! $app->environment('testing')) {
+            $app->instance(Storage::class, new CacheStorage($app));
+        }
 
         return $this;
     }

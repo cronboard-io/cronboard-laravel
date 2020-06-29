@@ -2,15 +2,15 @@
 
 namespace Cronboard\Support\Storage;
 
-use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Cache\Factory;
 
 class CacheStorage implements Storage
 {
     protected $cache;
 
-    public function __construct(Container $container)
+    public function __construct(Factory $cache)
     {
-        $this->cache = $container['cache'];
+        $this->cache = $cache;
     }
 
     public function store(string $key, $value)

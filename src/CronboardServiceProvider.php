@@ -154,7 +154,7 @@ class CronboardServiceProvider extends ServiceProvider
     public function registerStorage(Container $app)
     {
         if (! $app->environment('testing')) {
-            $app->instance(Storage::class, new CacheStorage($app));
+            $app->singleton(Storage::class, CacheStorage::class);
         }
 
         return $this;

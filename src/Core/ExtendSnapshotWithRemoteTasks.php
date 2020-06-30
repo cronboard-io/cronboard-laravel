@@ -101,24 +101,34 @@ class ExtendSnapshotWithRemoteTasks
 
         $tasksPayloadByKey = $tasksPayload->keyBy('key');
 
+        foreach ($tasksPayloadByKey as $taskKey => $taskData) {
+            $context = new TaskContext($this->app, $taskKey);
+
+            $this->applyRuntimeDataToContext($context, $taskData);
+        }
+
+        foreach ($taskAliases as $aliasedTaskKey => $taskKey) {
+            $context = TaskContext::inheritTaskContext($this->app, $aliasedTaskKey, $taskKey);
+
+            $taskData = $tasksPayloadByKey[$aliasedTaskKey] ?? ($tasksPayloadByKey[$taskKey] ?? []);
+            $this->applyRuntimeDataToContext($context, $taskData);
+        }
+    }
+
+    protected function applyRuntimeDataToContext(TaskContext $context, array $taskData)
+    {
         $defaultContext = [
             'silent' => 0,
             'active' => 1,
             'once' => 0,
         ];
-        foreach ($tasksPayloadByKey as $taskKey => $taskData) {
-            $taskData = array_merge($defaultContext, $taskData);
 
-            $context = new TaskContext($this->app, $taskKey);
-            $context->setTracking(!$taskData['silent']);
-            $context->setActive($taskData['active']);
-            $context->setOnce($taskData['once']);
-            $context->setOverrides($taskData['overrides'] ?? []);
-        }
+        $taskData = array_merge($defaultContext, $taskData);
 
-        foreach ($taskAliases as $aliasedTaskKey => $taskKey) {
-            TaskContext::inheritTaskContext($this->app, $aliasedTaskKey, $taskKey);
-        }
+        $context->setTracking(!$taskData['silent']);
+        $context->setActive($taskData['active']);
+        $context->setOnce($taskData['once']);
+        $context->setOverrides($taskData['overrides'] ?? []);
     }
 
     protected function createTasksFromPayload(Collection $tasksPayload, Snapshot $snapshot): Collection

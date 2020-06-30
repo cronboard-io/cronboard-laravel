@@ -86,15 +86,18 @@ class InstallCommand extends Command
     private function environmentVariableExists(): bool
     {
         $dotenv = null;
-        if (method_exists(Dotenv::class, 'create')) {
-            $dotenv = Dotenv::create($this->laravel->basePath());    
+
+        if (method_exists(Dotenv::class, 'createImmutable')) {
+            $dotenv = Dotenv::createImmutable($this->laravel->basePath());
+        } else if (method_exists(Dotenv::class, 'create')) {
+            $dotenv = Dotenv::create($this->laravel->basePath());
         } else {
             $dotenv = new Dotenv($this->laravel->basePath());
         }
-        
+
         $variables = $dotenv->safeLoad();
         $value = $variables[static::CRONBOARD_TOKEN_KEY] ?? null;
-        
+
         return !empty($value);
     }
 

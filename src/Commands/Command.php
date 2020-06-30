@@ -40,6 +40,14 @@ class Command
         }
     }
 
+    public function exists(): bool
+    {
+        if ($this->isExecCommand() || $this->isClosureCommand()) {
+            return true;
+        }
+        return class_exists($this->getHandler());
+    }
+
     public function getType(): string
     {
         return $this->type;

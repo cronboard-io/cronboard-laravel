@@ -97,8 +97,10 @@ trait TrackedEvent
     public function loadTaskFromCronboard()
     {
         $task = $this->cronboard->getTaskForEvent($this);
-        $this->setTask($task);
-        return $task;
+        if ($task->isCronboardTask()) {
+            $this->setTask($task);
+            return $task;
+        }
     }
 
     public function getTask(): ?Task
@@ -167,11 +169,17 @@ trait TrackedEvent
         $taskContext = $this->getCronboard()->setTaskContext($task);
         $output = $this->cronboard->getOutput();
 
-        if (($taskContext && !$taskContext->isActive())) {
-            if ($output) {
-                $output->disabled('Scheduled command is disabled and will not run: ' . $this->getSummaryForDisplay());
+
+        if ($taskContext) {
+            $isDisabled = ! $taskContext->isActive();
+            $isUnknown = ! $task->getCommand()->exists();
+
+            if ($isDisabled || $isUnknown) {
+                if ($output && $isDisabled) {
+                    $output->disabled('Scheduled command is disabled and will not run: ' . $this->getSummaryForDisplay());
+                }
+                return false;
             }
-            return false;
         }
 
         if ($output) {

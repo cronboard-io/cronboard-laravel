@@ -52,6 +52,8 @@ class LoadRemoteTasksIntoSchedule
         $customTasks = $this->cronboard->getTasks()->filter->isCronboardTask();
 
         foreach ($customTasks as $customTask) {
+            if (! $customTask->getCommand()->exists()) continue;
+
             if (! $this->isLoaded($schedule, $customTask)) {
                 $this->addTaskToSchedule($schedule, $customTask);
                 $this->rememberAsLoaded($schedule, $customTask);

@@ -3,6 +3,7 @@
 namespace Cronboard\Core\Concerns;
 
 use Cronboard\Console\Output as CronboardConsoleOutput;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 trait Output
@@ -19,6 +20,9 @@ trait Output
 
     public function getOutput()
     {
+        if (empty($this->output)) {
+            $this->registerOutputStream(new ConsoleOutput);
+        }
         return $this->output;
     }
 }

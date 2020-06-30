@@ -48,7 +48,7 @@ class Snapshot
     {
         return $this->commands->filter(function($command) {
             if ($command->isConsoleCommand() || $command->isJobCommand() || $command->isInvokableCommand()) {
-                return !class_exists($command->getHandler());
+                return ! $command->exists();
             }
             return false;
         })->isEmpty();

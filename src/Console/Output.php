@@ -34,6 +34,11 @@ class Output implements ExceptionListener
         $this->line($text, 'disabled');
     }
 
+    public function error(string $text)
+    {
+        $this->line($text, 'error');
+    }
+
     public function comment(string $text)
     {
         $this->line($text, 'comment');

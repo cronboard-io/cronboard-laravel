@@ -39,8 +39,13 @@ trait Boot
         if ($this->ready() && !$this->booted() && !$this->booting) {
             $this->booting = true;
 
-            // load commands from local codebase
-            $snapshot = (new DiscoverCommandsAndTasks($this->app))->getSnapshot();
+            $discoverAction = new DiscoverCommandsAndTasks($this->app);
+            $snapshot = $discoverAction->getSnapshot();
+
+            if ($discoverAction->snapshotWasInvalid()) {
+                $this->getOutput()
+                    ->error('Cronboard snapshot appears to be invalid. Please make sure to run `cronboard:record` after changes to your codebase');
+            }
 
             try {
                 if ($this->shouldContactRemote($snapshot)) {

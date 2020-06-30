@@ -17,18 +17,26 @@ class DiscoverCommandsAndTasks
     use HandlesSnapshotStorage;
 
     protected $app;
+    protected $wasInvalid;
 
     public function __construct(Container $app)
     {
         $this->app = $app;
+        $this->wasInvalid = false;
+    }
+
+    public function snapshotWasInvalid(): bool
+    {
+        return $this->wasInvalid;
     }
 
     public function getSnapshot(bool $store = true): Snapshot
     {
         $snapshot = $this->loadSnapshot();
+        $this->wasInvalid = $isInvalid = ! empty($snapshot) && ! $snapshot->validate();
 
         // if snapshot contains invalid information - we force a rebuild
-        if (! empty($snapshot) && ! $snapshot->validate()) {
+        if (! empty($snapshot) && $isInvalid) {
             $snapshot = null;
         }
 
@@ -65,7 +73,7 @@ class DiscoverCommandsAndTasks
             ->getCommandsAndTasks();
 
         $schedulerCommands = $commandsAndTasks['commands']->filter(function($command) {
-            return !($command instanceof CommandByAlias);
+            return ! ($command instanceof CommandByAlias);
         });
 
         // registry removes duplicates from both command sources by user command hashes

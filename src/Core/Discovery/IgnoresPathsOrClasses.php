@@ -32,15 +32,15 @@ trait IgnoresPathsOrClasses
 
     protected function shouldIgnoreClass(string $class, bool $checkExactClass = false): bool
     {
-        if (class_exists($class)) {
-            if (in_array($class, $this->ignoredPathsOrClasses)) {
-                return true;
-            }
-            if (!$checkExactClass) {
-                $filename = (new ReflectionClass($class))->getFileName();
-                return $this->shouldIgnorePathName($filename);
-            }
+        if (in_array($class, $this->ignoredPathsOrClasses)) {
+            return true;
         }
+
+        if (class_exists($class) && ! $checkExactClass) {
+            $filename = (new ReflectionClass($class))->getFileName();
+            return $this->shouldIgnorePathName($filename);
+        }
+
         return false;
     }
 
@@ -52,7 +52,6 @@ trait IgnoresPathsOrClasses
     protected function shouldIgnorePathName(string $pathname): bool
     {
         foreach ($this->ignoredPathsOrClasses as $pathOrClass) {
-            // dump($pathname, $pathOrClass, Str::startsWith($pathname, $pathOrClass));
             if (Str::startsWith($pathname, $pathOrClass)) {
                 return true;
             }

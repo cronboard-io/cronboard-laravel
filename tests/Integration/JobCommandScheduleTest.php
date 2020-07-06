@@ -4,6 +4,7 @@ namespace Cronboard\Tests\Integration;
 
 use Cronboard\Core\Api\Endpoints\Tasks;
 use Cronboard\Core\Cronboard;
+use Cronboard\Facades\Cronboard as CronboardFacade;
 use Cronboard\Tasks\Events\CallbackEvent;
 use Cronboard\Tests\Integration\Commands\JobCommand;
 use Cronboard\Tests\Integration\Commands\QueuedJobCommand;
@@ -27,6 +28,9 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $schedule->job(new JobCommand)->everyMinute();
         $schedule->job(new QueuedJobCommand, 'default', 'database')->everyMinute();
 
+        // test that excluded tasks are present in events but not in tasks
+        CronboardFacade::dontTrack($schedule)->job(new QueuedJobCommand, 'test', 'test')->everyMinute();
+
         return $schedule;
     }
 
@@ -40,7 +44,7 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->loadTasksIntoCronboard();
         $cronboard = $this->app->make(Cronboard::class);
 
-        $this->assertEquals(2, $events->count());
+        $this->assertEquals(3, $events->count());
         $this->assertEquals(2, $cronboard->getTasks()->count());
 
         $this->assertInstanceOf(CallbackEvent::class, $events[0]);
@@ -63,7 +67,7 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->loadTasksIntoCronboard();
         $cronboard = $this->app->make(Cronboard::class);
 
-        $this->assertEquals(2, $events->count());
+        $this->assertEquals(3, $events->count());
         $this->assertEquals(2, $cronboard->getTasks()->count());
 
         $this->assertInstanceOf(CallbackEvent::class, $events[1]);
@@ -86,7 +90,7 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->loadTasksIntoCronboard();
         $cronboard = $this->app->make(Cronboard::class);
 
-        $this->assertEquals(2, $events->count());
+        $this->assertEquals(3, $events->count());
         $this->assertEquals(2, $cronboard->getTasks()->count());
 
         $queueTask = $cronboard->getTasks()->values()[1];
@@ -112,7 +116,7 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->loadTasksIntoCronboard();
         $cronboard = $this->app->make(Cronboard::class);
 
-        $this->assertEquals(2, $events->count());
+        $this->assertEquals(3, $events->count());
         $this->assertEquals(2, $cronboard->getTasks()->count());
 
         $queueTask = $cronboard->getTasks()->values()[1];

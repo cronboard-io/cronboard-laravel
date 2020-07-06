@@ -99,7 +99,7 @@ trait TrackedEvent
     public function loadTaskFromCronboard()
     {
         $task = $this->cronboard->getTaskForEvent($this);
-        if ($task->isCronboardTask()) {
+        if (! empty($task) && $task->isCronboardTask()) {
             $this->setTask($task);
             return $task;
         }

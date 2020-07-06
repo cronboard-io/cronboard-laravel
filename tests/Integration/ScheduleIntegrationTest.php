@@ -40,7 +40,10 @@ abstract class ScheduleIntegrationTest extends TestCase
     protected function loadTasksIntoCronboard()
     {
         $commandsAndTasks = (new DiscoverTasksViaScheduler($this->app))->getCommandsAndTasks();
-        $snapshot = new Snapshot($this->app, $commandsAndTasks['commands'], $commandsAndTasks['tasks']);
+        $tasks = $commandsAndTasks['tasks']->each(function($task){
+            $task->setCronboardTask(true);
+        });
+        $snapshot = new Snapshot($this->app, $commandsAndTasks['commands'], $tasks);
         $this->cronboard = $this->app->make(Cronboard::class)->loadSnapshot($snapshot);
     }
 

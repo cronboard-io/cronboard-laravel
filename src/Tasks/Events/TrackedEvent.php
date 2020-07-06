@@ -39,7 +39,9 @@ trait TrackedEvent
     public function setTask(Task $task = null)
     {
         $this->task = $task;
-        $this->recordOutputInTask();
+        if (! empty($task)) {
+            $this->recordOutputInTask();
+        }
         return $this;
     }
 

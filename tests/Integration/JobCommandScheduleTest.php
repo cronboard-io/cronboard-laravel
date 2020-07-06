@@ -104,6 +104,32 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $queueWorker->runNextJob('database', 'default', new WorkerOptions);
     }
 
+    /** @test */
+    public function it_does_not_make_lifecycle_requests_for_application_tasks()
+    {
+        $events = $this->getSchedule()->dueEvents($this->app);
+
+        $this->loadTasksIntoCronboard();
+        $cronboard = $this->app->make(Cronboard::class);
+
+        $this->assertEquals(2, $events->count());
+        $this->assertEquals(2, $cronboard->getTasks()->count());
+
+        $queueTask = $cronboard->getTasks()->values()[1];
+        $queueTask->setCronboardTask(false);
+
+        $this->assertTaskEventNotFired('queue', $queueTask);
+        $this->assertTaskEventNotFired('start', $queueTask);
+        $this->assertTaskEventNotFired('end', $queueTask);
+        
+        // add job to the queue
+        $events[1]->run($this->app);
+
+        // process job
+        $queueWorker = $this->app->make('queue.worker');
+        $queueWorker->runNextJob('database', 'default', new WorkerOptions);
+    }
+
     // https://github.com/laravel/framework/issues/9733#issuecomment-479055459
     protected function tearDown() : void
     {

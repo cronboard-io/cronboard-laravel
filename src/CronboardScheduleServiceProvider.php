@@ -36,7 +36,7 @@ class CronboardScheduleServiceProvider extends ServiceProvider
                     $schedule = CronboardSchedule::createWithEventsFrom($schedule);
 
                     $this->app->instance(Schedule::class, $schedule);
-                    $this->app->singleton(Schedule::class, function() {
+                    $this->app->singleton(Schedule::class, function() use ($schedule) {
                         return $schedule;
                     });
                 }

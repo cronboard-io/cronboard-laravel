@@ -22,6 +22,9 @@ class Parameters implements Arrayable, Countable, IteratorAggregate
         $this->items = new Collection($items);
     }
 
+    /**
+     * @param Collection|self[] $value
+     */
     public static function wrap($value)
     {
         return $value instanceof static

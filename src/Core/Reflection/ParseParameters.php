@@ -20,9 +20,9 @@ class ParameterParseException extends \Exception {};
 
 class ParseParameters extends Action
 {
-    public function execute(array $parameters = [])
+    public function execute(array $parameters = [], bool $expectsGroupedParameters = false)
     {
-        if (Arr::isAssoc($parameters)) {
+        if (Arr::isAssoc($parameters) || $expectsGroupedParameters) {
             $parsedParameters = Collection::wrap($parameters)->map(function($parameters, $group) {
                 return $this->parseParameterList($parameters);
             });
@@ -33,7 +33,7 @@ class ParseParameters extends Action
         }
     }
 
-    protected function parseParameterList($parameters)
+    protected function parseParameterList(array $parameters)
     {
         return Collection::wrap($parameters ?: [])->map(function($data) {
             return $this->parseParameter($data);

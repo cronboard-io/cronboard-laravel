@@ -2,7 +2,7 @@
 
 namespace Cronboard\Tests\Core\Discovery;
 
-use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Configuration;
 use Cronboard\Core\Discovery\DiscoverCommandsInCodebase;
 use Cronboard\Tests\Stubs\ContextRecordInvokable;
 use Cronboard\Tests\Stubs\CronboardTestCommand;

@@ -7,25 +7,30 @@ use Cronboard\Console\PreviewCommand;
 use Cronboard\Console\RecordCommand;
 use Cronboard\Console\StatusCommand;
 use Cronboard\Core\Api\Client;
-use Cronboard\Core\Config\Configuration;
-use Cronboard\Core\Connector;
+use Cronboard\Core\Configuration;
 use Cronboard\Core\Cronboard;
 use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
-use Cronboard\Core\Execution\Listeners\CallableEventSubscriber;
-use Cronboard\Core\Execution\Listeners\CommandEventSubscriber;
-use Cronboard\Core\Execution\Listeners\ExecEventSubscriber;
-use Cronboard\Core\Execution\Listeners\JobEventSubscriber;
+use Cronboard\Core\LoadRemoteTasksIntoSchedule;
+use Cronboard\Core\Schedule as CronboardSchedule;
 use Cronboard\Facades\Cronboard as CronboardFacade;
-use Cronboard\Integrations\Integrations;
 use Cronboard\Runtime;
 use Cronboard\Support\FrameworkInformation;
+use Cronboard\Support\Helpers;
+use Cronboard\Support\QueueDispatcherWrapper;
 use Cronboard\Support\Signing\Verifier;
 use Cronboard\Support\Storage\CacheStorage;
 use Cronboard\Support\Storage\Storage;
+use Cronboard\Support\TrackedEventMixin;
+use Cronboard\Support\TrackedScheduleMixin;
 use Cronboard\Tasks\Task;
+use Cronboard\Tasks\TaskEventSubscriber;
+use Illuminate\Bus\Dispatcher;
 use Illuminate\Console\Events\ArtisanStarting;
+use Illuminate\Console\Scheduling\Event as SchedulerEvent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Bus\Dispatcher as DispatcherContract;
+use Illuminate\Contracts\Bus\QueueingDispatcher as QueueingDispatcherContract;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Log\Events\MessageLogged;
@@ -34,6 +39,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Traits\Macroable;
 
 class CronboardServiceProvider extends ServiceProvider
 {
@@ -57,29 +63,29 @@ class CronboardServiceProvider extends ServiceProvider
             ]);
 
             Queue::before(function(JobProcessing $event) {
-                $this->app['cronboard']->boot();
+                $this->app['cronboard']->reboot();
             });
 
             Event::listen(ArtisanStarting::class, function() {
                 $this->app['cronboard']->boot();
             });
 
-            $listeners = [
-                JobEventSubscriber::class,
-                CommandEventSubscriber::class,
-                CallableEventSubscriber::class,
-                ExecEventSubscriber::class,
-            ];
+            Event::subscribe(TaskEventSubscriber::class);
 
-            // $listeners = [
-            //     \Cronboard\Core\Execution\Listeners\DebugEventSubscriber::class
-            // ];
+            SchedulerEvent::mixin(new TrackedEventMixin);
+            CronboardSchedule::mixin(new TrackedScheduleMixin);
 
-            foreach ($listeners as $listener) {
-                Event::subscribe($this->app->make($listener));
+            if (Helpers::usesTrait(Schedule::class, Macroable::class)) {
+                Schedule::mixin(new TrackedScheduleMixin);    
             }
 
-            $this->hookIntoContainer();
+            $this->addTrackingToQueueDispatcher($this->app);
+
+            $this->app->resolving(Schedule::class, function ($schedule) {
+                if ($this->isCronboardActive()) {
+                    $this->app['cronboard']->trackSchedule($schedule);
+                }
+            });
         }
 
         // if cache has been cleared - make sure we refresh the snapshot
@@ -88,25 +94,6 @@ class CronboardServiceProvider extends ServiceProvider
                 (new DiscoverCommandsAndTasks($this->app))->getNewSnapshotAndStore();
             }
         });
-    }
-
-    protected function hookIntoContainer()
-    {
-        if ($this->getLaravelVersionAsInteger() < 5520) {
-            // Laravel 5.5
-            // force console kernel to add booting callback
-            $this->app->make(Kernel::class);
-
-            // add rebinding callback for schedule
-            $this->app->booted(function($app) {
-                if ($this->isCronboardActive()) {
-                    $isBoundAsInstance = !array_key_exists(Schedule::class, $app->getBindings()) && $app->isShared(Schedule::class);
-                    if ($isBoundAsInstance) {
-                        $app->instance(Schedule::class, $this->connectCronboardSchedule($app[Schedule::class]));
-                    }
-                }
-            });
-        }
     }
 
     /**
@@ -126,7 +113,7 @@ class CronboardServiceProvider extends ServiceProvider
 
         $this->registerCronboard($this->app);
 
-        $this->registerCronboardConnector($this->app);
+        $this->registerScheduledTaskTracking($this->app);
 
         $this->registerExceptionHandler($this->app);
 
@@ -204,18 +191,36 @@ class CronboardServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register connector
+     * Register tracking
      * @param  Container $app
      * @return void
      */
-    public function registerCronboardConnector(Container $app)
+    public function registerScheduledTaskTracking(Container $app)
     {
-        $app->instance('cronboard.connector', $connector = $app->make(Connector::class));
-
-        // connect when schedule bound as singleton
         $app->extend(Schedule::class, function($schedule) {
-            return $this->connectCronboardSchedule($schedule);
+            if ($this->app['cronboard']->ready()) {
+                return $this->trackScheduledTasks($schedule);
+            }
+            return $schedule;
         });
+    }
+
+    /**
+     * Add tracking to queue dispatcher
+     * @param  Container $app
+     * @return void
+     */
+    public function addTrackingToQueueDispatcher(Container $app)
+    {
+        $app->instance(Dispatcher::class, new QueueDispatcherWrapper($app[Dispatcher::class]));
+
+        $this->app->alias(
+            Dispatcher::class, DispatcherContract::class
+        );
+
+        $this->app->alias(
+            Dispatcher::class, QueueingDispatcherContract::class
+        );
     }
 
     /**
@@ -239,9 +244,17 @@ class CronboardServiceProvider extends ServiceProvider
         }
     }
 
-    protected function connectCronboardSchedule(Schedule $schedule)
+    protected function trackScheduledTasks(Schedule $schedule)
     {
-        return $this->app['cronboard.connector']->connect($schedule);
+        $shouldUseCustomSchedule = ! Helpers::usesTrait(Schedule::class, Macroable::class);
+
+        if ($shouldUseCustomSchedule && ! ($schedule instanceof CronboardSchedule)) {
+            $schedule = CronboardSchedule::createWithEventsFrom($schedule);
+        }
+
+        $this->app['cronboard']->trackSchedule($schedule);
+
+        return $schedule;
     }
 
     protected function isCronboardActive(): bool

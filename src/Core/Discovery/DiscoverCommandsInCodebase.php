@@ -4,7 +4,7 @@ namespace Cronboard\Core\Discovery;
 
 use Cronboard\Commands\Builder;
 use Cronboard\Commands\Command;
-use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Configuration;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;

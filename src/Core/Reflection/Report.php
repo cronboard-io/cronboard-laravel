@@ -30,6 +30,9 @@ class Report
         return $this->parameters;
     }
 
+    /**
+     * @param Collection|array $parameters
+     */
     public function addParameterGroup(string $key, $parameters = [])
     {
         $this->parameters->setParameterGroup($key, Parameters::wrap($parameters));

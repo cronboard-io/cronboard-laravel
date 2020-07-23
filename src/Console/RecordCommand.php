@@ -2,7 +2,7 @@
 
 namespace Cronboard\Console;
 
-use Cronboard\Core\Api\Endpoints\Cronboard;
+use Cronboard\Core\Api\Client;
 use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
 use Cronboard\Support\Environment;
 use Illuminate\Console\Command;
@@ -45,7 +45,9 @@ class RecordCommand extends Command
         // force refresh of commands
         $snapshot = (new DiscoverCommandsAndTasks($this->laravel))->getNewSnapshotAndStore();
 
-        $endpoint = $this->laravel->make(Cronboard::class);
+        $endpoint = $this->laravel
+            ->make(Client::class)
+            ->cronboard();
 
         // exceptions are handled here because we want to notify users about any issues during recording
         $response = $endpoint->record(

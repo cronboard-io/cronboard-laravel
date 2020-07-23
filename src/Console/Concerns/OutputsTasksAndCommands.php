@@ -18,7 +18,9 @@ trait OutputsTasksAndCommands
             $taskRows[] = $this->getTaskValues($task);
         }
         $this->comment("\nTASKS\n");
-        $this->table($this->getTaskFields(), $taskRows);
+        if (! empty($taskRows)) {
+            $this->table($this->getTaskFields(), $taskRows);    
+        }
     }
 
     protected function getTaskFields(): array

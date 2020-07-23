@@ -3,8 +3,7 @@
 namespace Cronboard\Core\Discovery;
 
 use Cronboard\Commands\CommandByAlias;
-use Cronboard\Commands\Registry;
-use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Configuration;
 use Cronboard\Core\Discovery\DiscoverCommandsInCodebase;
 use Cronboard\Core\Discovery\DiscoverCommandsViaArtisan;
 use Cronboard\Core\Discovery\DiscoverTasksViaScheduler;
@@ -76,10 +75,7 @@ class DiscoverCommandsAndTasks
             return ! ($command instanceof CommandByAlias);
         });
 
-        // registry removes duplicates from both command sources by user command hashes
-        // and restricts set to on project commands
-        $registry = new Registry($this->app, $commands->merge($schedulerCommands));
-        $commands = $registry->getCommands();
+        $commands = $commands->merge($schedulerCommands)->keyBy->getKey()->values();
 
         return new Snapshot($this->app, $commands, $commandsAndTasks['tasks']);
     }

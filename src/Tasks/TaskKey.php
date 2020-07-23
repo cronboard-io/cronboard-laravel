@@ -16,12 +16,12 @@ class TaskKey
 
     protected function fromCallbackEvent(CallbackEvent $event): ?string
     {
-        return sha1($event->expression . $this->commandBaseFromCallbackEvent($event));
+        return sha1($this->getEventExpression($event) . $this->commandBaseFromCallbackEvent($event));
     }
 
     protected function fromEvent(Event $event): string
     {
-        return sha1($event->expression . $this->commandBaseFromEvent($event));
+        return sha1($this->getEventExpression($event) . $this->commandBaseFromEvent($event));
     }
 
     protected function commandBaseFromCallbackEvent(CallbackEvent $event): ?string
@@ -33,6 +33,11 @@ class TaskKey
         } else {
             return $event->description;
         }
+    }
+
+    protected function getEventExpression(Event $event)
+    {
+        return $event->originalExpression ?? $event->expression;
     }
 
     protected function commandBaseFromEvent(Event $event)

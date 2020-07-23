@@ -30,7 +30,7 @@ class CollectorModule extends Module
         ];
     }
 
-    public function onContextEnter()
+    public function onContextEnter(): void
     {
         $this->collector = new Collector([
             new MemoryCollector,
@@ -39,7 +39,7 @@ class CollectorModule extends Module
         $this->collector->start();
     }
 
-    public function onContextFinalise()
+    public function onContextFinalise(): void
     {
         $this->collector->end();
     }

@@ -3,7 +3,7 @@
 namespace Cronboard\Console;
 
 use Closure;
-use Cronboard\Core\Api\Endpoints\Cronboard;
+use Cronboard\Core\Api\Client;
 use Cronboard\Support\Environment;
 use Dotenv\Dotenv;
 use Illuminate\Console\Command;
@@ -44,7 +44,10 @@ class InstallCommand extends Command
         }
 
         $environmentData = (new Environment($this->laravel))->toArray();
-        $response = $this->laravel->make(Cronboard::class)->install($token, $environmentData);
+        $response = $this->laravel
+            ->make(Client::class)
+            ->cronboard()
+            ->install($token, $environmentData);
 
         if ($response['success'] ?? false) {
             $tokenArgumentIsDifferentFromConfig = $tokenAsArgument && (!$tokenFromConfig || $tokenFromConfig !== $tokenAsArgument);
@@ -90,8 +93,10 @@ class InstallCommand extends Command
         if (method_exists(Dotenv::class, 'createImmutable')) {
             $dotenv = Dotenv::createImmutable($this->laravel->basePath());
         } else if (method_exists(Dotenv::class, 'create')) {
+            /** @psalm-suppress TooFewArguments **/
             $dotenv = Dotenv::create($this->laravel->basePath());
         } else {
+            /** @psalm-suppress TooFewArguments **/
             $dotenv = new Dotenv($this->laravel->basePath());
         }
 

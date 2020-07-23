@@ -4,32 +4,32 @@ namespace Cronboard\Core\Api\Endpoints;
 
 use Carbon\Carbon;
 use Cronboard\Tasks\Task;
-use Cronboard\Tasks\TaskContext;
+use Cronboard\Tasks\TaskRuntime;
 
 class Tasks extends Endpoint
 {
-    public function start(Task $task, TaskContext $context)
+    public function start(Task $task, TaskRuntime $context)
     {
         $payload = $this->getTaskStartedPayload($task, $context);
 
         return $this->post('tasks/start', $payload);
     }
 
-    public function end(Task $task, TaskContext $context)
+    public function end(Task $task, TaskRuntime $context)
     {
         $payload = $this->getTaskFinishedPayload($task, $context);
 
         return $this->post('tasks/end', $payload);
     }
 
-    public function fail(Task $task, TaskContext $context)
+    public function fail(Task $task, TaskRuntime $context)
     {
         $payload = $this->getTaskFinishedPayload($task, $context);
 
         return $this->post('tasks/fail', $payload);
     }
 
-    public function queue(Task $task, TaskContext $context)
+    public function queue(Task $task, TaskRuntime $context)
     {
         $payload = $this->getTaskStartedPayload($task, $context);
 
@@ -46,7 +46,7 @@ class Tasks extends Endpoint
         return $this->post('tasks/output', $payload);
     }
 
-    protected function getTaskStartedPayload(Task $task, TaskContext $context): array
+    protected function getTaskStartedPayload(Task $task, TaskRuntime $context): array
     {
         $payload = [
             'key' => $task->getKey(),
@@ -57,7 +57,7 @@ class Tasks extends Endpoint
         return $payload;
     }
 
-    protected function getTaskFinishedPayload(Task $task, TaskContext $context): array
+    protected function getTaskFinishedPayload(Task $task, TaskRuntime $context): array
     {
         $payload = [
             'key' => $task->getKey(),

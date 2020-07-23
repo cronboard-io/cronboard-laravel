@@ -50,7 +50,7 @@ abstract class InputParameter extends Parameter
 
     /**
      * Create a parameter from command input element
-     * @param  InputOption|InputArgument $input input
+     * @param  \Symfony\Component\Console\Input\InputOption|\Symfony\Component\Console\Input\InputArgument $input input
      * @return Parameter
      */
     protected static function createParameterFromInput($input)

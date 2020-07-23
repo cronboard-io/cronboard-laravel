@@ -5,13 +5,13 @@ namespace Cronboard\Tests\Core\Execution;
 use Cronboard\Core\Execution\Context\ConfigurationSettingOverride;
 use Cronboard\Core\Execution\Context\EnvironmentVariableOverride;
 use Cronboard\Tasks\Task;
-use Cronboard\Tasks\TaskContext;
+use Cronboard\Tasks\TaskRuntime;
 use Cronboard\Tests\Stubs\ContextRecordInvokable;
 use Cronboard\Tests\TestCase;
 use Illuminate\Support\Collection;
 use Mockery as m;
 
-class CustomTaskContextTest extends TestCase
+class CustomTaskRuntimeTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -28,7 +28,7 @@ class CustomTaskContextTest extends TestCase
             new EnvironmentVariableOverride('TEST_ENV_VAR', 'test1')
         ];
         $overrides = Collection::wrap($configOverrides)->merge($envOverrides)->toArray();
-        $taskContext = new TaskContext($this->app, 'taskKey');
+        $taskContext = new TaskRuntime('taskKey');
         $taskContext->setOverrides($overrides);
 
         $taskContext->enter();
@@ -56,7 +56,7 @@ class CustomTaskContextTest extends TestCase
         ];
         $envOverrides = [];
         $overrides = Collection::wrap($configOverrides)->merge($envOverrides)->toArray();
-        $taskContext = new TaskContext($this->app, 'taskKey');
+        $taskContext = new TaskRuntime('taskKey');
         $taskContext->setOverrides($overrides);
 
         $taskContext->enter();

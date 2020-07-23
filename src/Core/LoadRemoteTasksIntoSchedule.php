@@ -2,21 +2,19 @@
 
 namespace Cronboard\Core;
 
-use Cronboard\Commands\Command;
-use Cronboard\Console\RecordCommand;
-use Cronboard\Core\Exceptions\Exception;
+use Cronboard\Core\Exception;
 use Cronboard\Core\Execution\ExecuteCommandTask;
 use Cronboard\Core\Execution\ExecuteExecTask;
 use Cronboard\Core\Execution\ExecuteInvokableTask;
 use Cronboard\Core\Execution\ExecuteJobTask;
-use Cronboard\Core\Schedule as CronboardSchedule;
-use Cronboard\Integrations\Integrations;
+use Cronboard\Core\Execution\ExecuteTask;
 use Cronboard\Support\CommandContext;
 use Cronboard\Tasks\Task;
-use Illuminate\Console\Scheduling\CallbackEvent;
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Contracts\Container\Container;
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 
 /**
@@ -37,7 +35,7 @@ class LoadRemoteTasksIntoSchedule
 
     public function execute(Schedule $schedule)
     {
-        $commandContext = new CommandContext($this->app);
+        $commandContext = $this->app->make(CommandContext::class);
 
         // if we're not running the schedule - no need to load remote commands
         if (! $commandContext->inCommandsContext($this->getScheduleRunCommands())) {
@@ -45,17 +43,25 @@ class LoadRemoteTasksIntoSchedule
         }
 
         // cronboard has not been boostrapped and we ignore pulling remote tasks
-        if (! ($schedule instanceof CronboardSchedule)) {
+        if (! $this->cronboard->booted()) {
             return $schedule;
         }
 
-        $customTasks = $this->cronboard->getTasks()->filter->isCronboardTask();
+        $customTasks = $this->cronboard->getTasks()->filter(function($task) {
+            $isQueuedTask = $task->isRuntimeTask() && ! $task->isImmediateTask();
+            return $task->isCronboardTask() && ! $isQueuedTask;
+        });
 
         foreach ($customTasks as $customTask) {
             if (! $customTask->getCommand()->exists()) continue;
 
             if (! $this->isLoaded($schedule, $customTask)) {
-                $this->addTaskToSchedule($schedule, $customTask);
+                $event = $this->addTaskToSchedule($schedule, $customTask);
+
+                if ($event) {
+                    $this->cronboard->trackEvent($event);
+                }
+
                 $this->rememberAsLoaded($schedule, $customTask);
             }
         }
@@ -65,8 +71,7 @@ class LoadRemoteTasksIntoSchedule
 
     protected function getScheduleRunCommands(): Collection
     {
-        return (new Collection(['schedule:run', 'schedule:finish']))
-            ->merge(Integrations::getAdditionalScheduleCommands());
+        return new Collection(['schedule:run', 'schedule:finish']);
     }
 
     protected function isLoaded(Schedule $schedule, Task $task)
@@ -83,11 +88,11 @@ class LoadRemoteTasksIntoSchedule
         static::$loadedTasks[$key] = $loadedTasks;
     }
 
-    protected function addTaskToSchedule(Schedule $schedule, Task $task)
+    protected function addTaskToSchedule(Schedule $schedule, Task $task): ?Event
     {
         $event = $this->addEventFromTask($schedule, $task);
-        if (!is_null($event)) {
-            $event = $event->setTask($task);
+        if (! is_null($event)) {
+            $event->linkWithTask($task);
 
             // apply constraints
             foreach ($task->getConstraints() as $constraintData) {
@@ -100,35 +105,42 @@ class LoadRemoteTasksIntoSchedule
         return $event;
     }
 
-    protected function addEventFromTask(Schedule $schedule, Task $task)
+    protected function addEventFromTask(Schedule $schedule, Task $task): ?Event
     {
+        $event = null;
         $command = $task->getCommand();
 
         try {
-            $event = null;
-            switch ($command->getType()) {
-                case 'invokable':
-                    $event = ExecuteInvokableTask::create($task, $this->app)->attach($schedule);
-                    break;
-                case 'exec':
-                    $event = ExecuteExecTask::create($task, $this->app)->attach($schedule);
-                    break;
-                case 'job':
-                    $event = ExecuteJobTask::create($task, $this->app)->attach($schedule);
-                    break;
-                case 'command':
-                    $event = ExecuteCommandTask::create($task, $this->app)->attach($schedule);
-                    break;
-                default:
-                    $event = null;
-            }
-            if ($event) {
+            if ($builder = $this->getTaskBuilder($command->getType(), $task)) {
+                $event = $builder->attach($schedule);
                 $event->setRemoteEvent(true);
             }
-            return $event;
         } catch (ModelNotFoundException $e) {
             $eventCreationException = new Exception($e->getMessage(), 0, $e);
             $this->cronboard->reportException($eventCreationException);
         }
+        
+        return $event;
+    }
+
+    protected function getTaskBuilders(): array
+    {
+        return [
+            'invokable' => ExecuteInvokableTask::class,
+            'exec' => ExecuteExecTask::class,
+            'job' => ExecuteJobTask::class,
+            'command' => ExecuteCommandTask::class,
+        ];
+    }
+
+    protected function getTaskBuilderClass(string $commandType): ?string
+    {
+        return Arr::get($this->getTaskBuilders(), $commandType ?: 'unknown');
+    }
+
+    protected function getTaskBuilder(string $commandType, Task $task): ?ExecuteTask
+    {
+        $builderClass = $this->getTaskBuilderClass($commandType);
+        return $builderClass ? $builderClass::create($task, $this->app) : null;
     }
 }

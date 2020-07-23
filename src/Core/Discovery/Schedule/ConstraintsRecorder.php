@@ -3,6 +3,7 @@
 namespace Cronboard\Core\Discovery\Schedule;
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Collection;
 
 class ConstraintsRecorder extends Schedule
 {
@@ -24,9 +25,11 @@ class ConstraintsRecorder extends Schedule
         return $this;
     }
 
-    protected function record($method, $args)
+    protected function record(string $method, array $args)
     {
-        $this->constraints[] = compact('method', 'args');
+        if (! in_array($method, $this->getIgnoredConstraints())) {
+            $this->constraints[] = compact('method', 'args');
+        }
     }
 
     public function call($callback, array $parameters = [])
@@ -47,5 +50,15 @@ class ConstraintsRecorder extends Schedule
     public function exec($command, array $parameters = [])
     {
         return $this;
+    }
+
+    public function hasRecordedConstraint(string $constraint)
+    {
+        return (new Collection($this->constraints))->pluck('method')->contains($constraint);
+    }
+
+    public function getIgnoredConstraints(): array
+    {
+        return ['name', 'description'];
     }
 }

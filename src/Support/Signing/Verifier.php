@@ -2,7 +2,7 @@
 
 namespace Cronboard\Support\Signing;
 
-use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Configuration;
 
 class Verifier
 {

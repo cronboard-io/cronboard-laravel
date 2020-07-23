@@ -1,8 +1,8 @@
 <?php
 
-namespace Cronboard\Core\Config;
+namespace Cronboard\Core;
 
-use Cronboard\Core\Api\Endpoints\Cronboard;
+use Cronboard\Core\Api\Client;
 use Cronboard\Core\Api\Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Arr;
@@ -108,7 +108,10 @@ class Configuration
         try {
             $this->apiException = null;
 
-            $response = $this->app->make(Cronboard::class)->validateToken($token);
+            $response = $this->app
+                ->make(Client::class)
+                ->cronboard()
+                ->validateToken($token);
 
             return $response['valid'] ?? false;
         } catch (Exception $e) {

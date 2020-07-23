@@ -2,17 +2,19 @@
 
 namespace Cronboard\Tasks\Jobs;
 
+use Cronboard\Tasks\Task;
+
 trait TrackedJob
 {
-    protected $taskKey;
+    public $task;
 
-    public function getTaskKey(): ?string
+    public function getTask(): ?string
     {
-        return $this->taskKey;
+        return $this->task;
     }
 
-    public function setTaskKey(string $key)
+    public function setTask(Task $task)
     {
-        $this->taskKey = $key;
+        $this->task = $task->getKey();
     }
 }

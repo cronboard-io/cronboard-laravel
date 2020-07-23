@@ -2,46 +2,60 @@
 
 namespace Cronboard\Core;
 
+use Closure;
 use Cronboard\Core\Api\Client;
-use Cronboard\Core\Api\Endpoints\Tasks;
-use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Concerns\Boot;
+use Cronboard\Core\Concerns\Exceptions;
+use Cronboard\Core\Configuration;
+use Cronboard\Core\Context\EventContext;
+use Cronboard\Core\Context\TaskContext;
 use Cronboard\Core\Discovery\Snapshot;
-use Cronboard\Core\Exceptions\Exception as InternalException;
+use Cronboard\Core\Exception as InternalException;
+use Cronboard\Core\Execution\Events\TaskFinished;
+use Cronboard\Core\Execution\Events\TaskStarting;
 use Cronboard\Support\Signing\Verifier;
-use Cronboard\Tasks\Resolver;
 use Cronboard\Tasks\Task;
-use Cronboard\Tasks\TaskContext;
 use Cronboard\Tasks\TaskKey;
+use Cronboard\Tasks\TaskRuntime;
 use Exception;
 use Illuminate\Console\Scheduling\Event;
-use Illuminate\Container\Container;
-use Illuminate\Support\Arr;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Support\Collection;
-use Closure;
 
-class Cronboard implements Connectable
+class Cronboard
 {
-    use Concerns\Boot;
-    use Concerns\Context;
-    use Concerns\Exceptions;
-    use Concerns\Output;
-    use Concerns\Tracking;
+    const VERSION = '0.6.0';
 
+    use Boot;
+    use Exceptions;
+
+    protected $client;
+    protected $config;
     protected $tasks;
 
     public function __construct(Container $app, Configuration $config)
     {
         $this->app = $app;
+        $this->client = $app->make(Client::class);
         $this->config = $config;
-
         $this->tasks = new Collection;
+    }
 
-        $this->exceptionListeners = new Collection;
+    public function setClient(Client $client)
+    {
+        $this->client = $client;
     }
 
     public function loadConfiguration(Configuration $config)
     {
         $this->config = $config;
+    }
+
+    protected function getConfiguration(): Configuration
+    {
+        return $this->config;
     }
 
     public function loadSnapshot(Snapshot $snapshot)
@@ -50,6 +64,17 @@ class Cronboard implements Connectable
             return $task->getKey();
         });
         return $this;
+    }
+
+    public function getTasks(): Collection
+    {
+        return $this->tasks;
+    }
+
+    public function getTaskByKey(string $key = null): ?Task
+    {
+        if (! $key) return null;
+        return $this->getTasks()->get($key);
     }
 
     public function updateToken(string $token)
@@ -61,72 +86,167 @@ class Cronboard implements Connectable
 
     public function getTaskForEvent(Event $event): ?Task
     {
-        $resolver = new Resolver($this);
+        $eventTask = $this->getTaskByKey($event->getTaskKey());
+        $contextTask = TaskContext::getTask();
 
-        if ($task = $resolver->resolveFromEventTask($event)) {
-            return $task;
+        if (! empty($eventTask) && ! empty($contextTask)) {
+            if ($contextTask->hasSameBaseTaskAs($eventTask)) {
+                return $contextTask;
+            }
+            return $eventTask;
         }
 
-        return $resolver->resolveFromEvent($event) ?: $resolver->resolveFromEnvironment();
+        return $eventTask ?: $contextTask;
     }
 
-    public function getTaskByKey(string $key): ?Task
+    public function trackEvent(Event $event)
     {
-        return $this->getTasks()->get($key);
+        if ($event->isTracked()) {
+            return;
+        }
+
+        $task = $this->getTaskForEvent($event);
+        if ($task) {
+            $runtime = TaskRuntime::fromTask($task);
+            $event->adjustRuntimeData($runtime);
+        }
+
+        $event->when(function() use ($event) {
+            $task = $this->getTaskForEvent($event);
+
+            $runtime = $this->getTrackedTaskRuntime($task);
+            $output = $this->getConsoleOutput();
+
+            if ($runtime) {
+                $isDisabled = ! $runtime->isActive();
+                $isUnknown = ! $task->getCommand()->exists();
+
+                if ($isDisabled || $isUnknown) {
+                    if ($isDisabled) {
+                        $output->disabled('Scheduled command is disabled and will not run: ' . $event->getSummaryForDisplay());
+                    }
+                    return false;
+                }
+            }
+
+            if (empty($runtime)) {
+                $output->silent('Scheduled command is not supported or has not been recorded, and will not report to Cronboard: ' . $event->getSummaryForDisplay());
+                $output->comment('Please run `cronboard:record` if you haven\'t or use a unique `name()` or `description()` to facilitate integration with Cronboard.');
+            }
+
+            if (! empty($runtime) && ! $runtime->isTracked()) {
+                $output->silent('Scheduled command is silenced and will not report to Cronboard: ' . $event->getSummaryForDisplay());
+            }
+
+            return true;
+        });
+
+        $event->before(function(Dispatcher $dispatcher) use ($event) {
+            EventContext::enter($event);
+
+            $task = $this->getTaskForEvent($event);
+
+            if ($task) {
+                $runtime = TaskContext::enter($task);
+
+                $queuedTask = $this->queue($task);
+                $taskInstance = $queuedTask ?: $task;
+
+                $event->linkWithTask($taskInstance);
+
+                $dispatcher->dispatch(new TaskStarting($taskInstance));
+            }
+
+            EventContext::exit();
+        });
+
+        $event->after(function(Dispatcher $dispatcher) use ($event) {
+            EventContext::enter($event);
+
+            $task = $this->getTaskForEvent($event);
+
+            if ($task) {
+                $dispatcher->dispatch(new TaskFinished($task));
+            }
+
+            EventContext::exit();
+        });
+
+        $event->setTracked();
     }
 
-    public function getTasks(): Collection
+    public function trackSchedule(Schedule $schedule)
     {
-        return $this->tasks;
+        foreach ($schedule->events() as $event) {
+            if ($event->shouldTrack()) {
+                $this->trackEvent($event);
+            }
+        }
     }
 
+    /// REFACTOR BELOW
     public function fail(Task $task, Exception $exception = null): bool
     {
-        if ($context = $this->getTrackedContextForTaskForRequest($task)) {
+        if ($this->isOffline()) {
+            return false;
+        }
+
+        if ($context = $this->getTrackedTaskRuntime($task)) {
             if ($exception) {
                 $context->setException($exception);
             }
-            $response = $this->app->make(Tasks::class)->fail($task, $context);
+            $response = $this->client->tasks()->fail($task, $context);
             return $response['success'] ?? false;
         }
+
         return false;
     }
 
     public function start(Task $task): bool
     {
-        if ($context = $this->getTrackedContextForTaskForRequest($task)) {
-            $response = $this->app->make(Tasks::class)->start($task, $context);
+        if ($this->isOffline()) {
+            return false;
+        }
+
+        if ($context = $this->getTrackedTaskRuntime($task)) {
+            $response = $this->client->tasks()->start($task, $context);
             $success = $response['success'] ?? false;
 
-            if ($success) {
-                $key = $response['key'] ?? null;
-                if (!is_null($key)) {
-                    $this->switchToTaskInstance($task, $key);
-                }
+            if ($success && ($key = $response['key'] ?? null)) {
+                $this->switchToTaskInstance($task, $key);
             }
 
             return $success;
         }
+
         return false;
     }
 
     public function end(Task $task): bool
     {
-        if ($context = $this->getTrackedContextForTaskForRequest($task)) {
-            $response = $this->app->make(Tasks::class)->end($task, $context);
+        if ($this->isOffline()) {
+            return false;
+        }
+
+        if ($context = $this->getTrackedTaskRuntime($task)) {
+            $response = $this->client->tasks()->end($task, $context);
             return $response['success'] ?? false;
         }
+
         return false;
     }
 
     public function queue(Task $task): ?Task
     {
-        return $this->catchInternalExceptionsInCallback(function() use ($task) {
-            if ($context = $this->getTrackedContextForTaskForRequest($task)) {
-                $response = $this->app->make(Tasks::class)->queue($task, $context);
-                $responseKey = $response['key'] ?? false;
+        if ($this->isOffline()) {
+            return null;
+        }
 
-                if ($responseKey) {
+        return $this->catchInternalExceptionsInCallback(function() use ($task) {
+            if ($context = $this->getTrackedTaskRuntime($task)) {
+                $response = $this->client->tasks()->queue($task, $context);
+
+                if ($responseKey = $response['key'] ?? false) {
                     // add queue task to current task list, so that it can be picked up if
                     // we're executing jobs using the sync driver
                     $queuedTask = $task->aliasAsRuntimeInstance($responseKey);
@@ -143,8 +263,8 @@ class Cronboard implements Connectable
     public function sendTaskOutput(Task $task, string $output)
     {
         return $this->catchInternalExceptionsInCallback(function() use ($task, $output) {
-            if ($context = $this->getTrackedContextForTaskForRequest($task)) {
-                $response = $this->app->make(Tasks::class)->output($task, $output);
+            if ($runtime = $this->getTrackedTaskRuntime($task)) {
+                $response = $this->client->tasks()->output($task, $output);
                 return $response['success'] ?? false;
             }
             return false;
@@ -153,20 +273,25 @@ class Cronboard implements Connectable
 
     private function switchToTaskInstance(Task $originalTask, string $key, Task $taskInstance = null): Task
     {
-        if ($originalTask->getKey() !== $key) {
+        $isDifferentTask = $originalTask->getKey() !== $key;
+
+        if ($isDifferentTask) {
             if (is_null($taskInstance)) {
                 $taskInstance = $originalTask->aliasAsRuntimeInstance($key);
             }
 
-            if (!$this->tasks->has($key)) {
+            if (! $this->tasks->has($key)) {
                 $this->tasks[$key] = $taskInstance;
             }
         }
 
         $taskInstance = $taskInstance ?: $originalTask;
 
-        // switch context to the queue task as it may start execution immediately
-        $this->setTaskContext($taskInstance);
+
+        if ($isDifferentTask) {
+            // switch context to the queue task as it may start execution immediately
+            TaskContext::enter($taskInstance);
+        }
 
         return $taskInstance;
     }
@@ -180,12 +305,14 @@ class Cronboard implements Connectable
         }
     }
 
-    private function getTrackedContextForTaskForRequest(Task $task): ?TaskContext
+    private function getTrackedTaskRuntime(Task $task = null): ?TaskRuntime
     {
-        // we still need to load the context, even if we're not returning it
-        // that way we make sure the no requests are made, but we still
-        // enter the context
-        $context = $this->getTrackedContextForTask($task);
-        return $this->isOffline() ? null : $context;
+        if (! empty($task)) {
+            $runtime = TaskRuntime::fromTask($task);
+            if ($runtime->isTracked()) {
+                return $runtime;
+            }
+        }
+        return null;
     }
 }

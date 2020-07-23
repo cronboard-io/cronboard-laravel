@@ -2,7 +2,6 @@
 
 namespace Cronboard\Tests\Integration;
 
-use Cronboard\Core\Api\Endpoints\Tasks;
 use Cronboard\Core\Cronboard;
 use Cronboard\Tasks\Events\CallbackEvent;
 use Cronboard\Tests\Integration\Commands\InvokableCommand;
@@ -35,19 +34,22 @@ class InvokableCommandScheduleTest extends ScheduleIntegrationTest
             return;
         }
 
+        // make sure tasks are loaded in Cronboard
+        $cronboard = $this->loadTasksIntoCronboard();
+
+        // manually boot since we're not going through artisan
+        $cronboard->boot();
+
         // get events
         $events = $this->getSchedule()->dueEvents($this->app);
 
-        // make sure tasks are loaded in Cronboard
-        $this->loadTasksIntoCronboard();
-        $cronboard = $this->app->make(Cronboard::class);
-
         $this->assertEquals(1, $events->count());
         $invokableEvent = $events[0];
-        $this->assertInstanceOf(CallbackEvent::class, $invokableEvent);
 
         $this->assertEquals(1, $cronboard->getTasks()->count());
         $task = $cronboard->getTasks()->first();
+
+        $this->assertEquals($invokableEvent->getTaskKey(), $task->getKey());
 
         // task queued
         $this->assertTaskEvent('queue', $task);

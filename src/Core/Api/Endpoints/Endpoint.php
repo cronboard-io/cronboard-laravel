@@ -25,19 +25,22 @@ class Endpoint
         return call_user_func_array([$this->client, $method], $args);
     }
 
-    public function get($endpoint)
+    public function get(string $endpoint)
     {
         return $this->respond(
             $this->request('GET', $endpoint)
         );
     }
 
-    public function postWithoutVerification($endpoint, $data)
+    /**
+     * @param array $data
+     */
+    public function postWithoutVerification(string $endpoint, array $data)
     {
         return $this->post($endpoint, $data, true);
     }
 
-    public function post($endpoint, $data, $disableVerify = false)
+    public function post(string $endpoint, array $data, bool $disableVerify = false)
     {
         return $this->respond(
             $this->request('POST', $endpoint, [
@@ -47,7 +50,7 @@ class Endpoint
         );
     }
 
-    public function request($method, $uri = '', array $options = [])
+    public function request(string $method, string $uri = '', array $options = [])
     {
         try {
             $response = $this->client->request($method, 'api/' . $uri, array_merge($options, [

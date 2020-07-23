@@ -2,7 +2,7 @@
 
 namespace Cronboard\Core\Api;
 
-use Cronboard\Core\Exceptions\Exception as CronboardException;
+use Cronboard\Core\Exception as CronboardException;
 use Throwable;
 
 class Exception extends CronboardException

@@ -40,4 +40,9 @@ class EventRecorder
     {
         return $this->constraintsRecorder->getConstraintsData();
     }
+
+    public function shouldRecord(): bool
+    {
+        return ! $this->constraintsRecorder->hasRecordedConstraint('doNotTrack');
+    }
 }

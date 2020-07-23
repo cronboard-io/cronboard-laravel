@@ -14,7 +14,7 @@ class Task
     protected $constraints;
     protected $custom;
     protected $runtime;
-    protected $single;
+    protected $immediate;
     protected $details;
     protected $failed;
 
@@ -26,7 +26,7 @@ class Task
         $this->constraints = $constraints;
         $this->custom = $custom;
         $this->runtime = false;
-        $this->single = false;
+        $this->immediate = false;
         $this->failed = false;
         $this->details = [];
     }
@@ -63,12 +63,12 @@ class Task
 
     public function isApplicationTask(): ?bool
     {
-        return !$this->isCronboardTask();
+        return ! $this->isCronboardTask();
     }
 
-    public function isSingleExecution(): ?bool
+    public function isImmediateTask(): ?bool
     {
-        return $this->single;
+        return $this->immediate;
     }
 
     public function isRuntimeTask(): ?bool
@@ -76,9 +76,9 @@ class Task
         return $this->runtime;
     }
 
-    public function setFailed()
+    public function setFailed(bool $failed = true)
     {
-        $this->failed = true;
+        $this->failed = $failed;
     }
 
     public function hasFailed(): bool
@@ -86,9 +86,9 @@ class Task
         return $this->failed;
     }
 
-    public function setSingleExecution(bool $single)
+    public function setImmediateTask(bool $immediate)
     {
-        $this->single = $single;
+        $this->immediate = $immediate;
     }
 
     public function toArray(): array
@@ -121,12 +121,19 @@ class Task
         return $this->originalTaskKey;
     }
 
-    public function aliasAsRuntimeInstance(string $key, bool $single = false, Parameters $parameters = null)
+    public function hasSameBaseTaskAs(Task $other): bool
+    {
+        $ownBaseKey = $this->getOriginalTaskKey() ?: $this->getKey();
+        $otherBaseKey = $other->getOriginalTaskKey() ?: $other->getKey();
+        return $ownBaseKey === $otherBaseKey;
+    }
+
+    public function aliasAsRuntimeInstance(string $key, bool $immediate = false, Parameters $parameters = null)
     {
         return $this->aliasAsTaskInstance($key, [
             'custom' => true,
             'runtime' => true,
-            'single' => $single,
+            'immediate' => $immediate,
             'parameters' => $parameters ?: $this->parameters
         ]);
     }

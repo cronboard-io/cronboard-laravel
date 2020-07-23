@@ -2,10 +2,12 @@
 
 namespace Cronboard\Tests;
 
-use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Api\Client;
 use Cronboard\Support\Storage\Storage;
 use Cronboard\Tests\Stubs\ContextRecordCommand;
 use Cronboard\Tests\Stubs\CronboardTestCommand;
+use Cronboard\Tests\Support\TestClient;
+use Cronboard\Tests\Support\TestConfiguration;
 use Cronboard\Tests\Support\TestStorage;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,16 +29,13 @@ class CronboardTestsServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $configArray = array_merge($this->app->config['cronboard'], [
-            'enabled' => true,
-            'client' => [
-                'token' => 'TEST_TOKEN'
-            ]
-        ]);
-        $configuration = new Configuration($this->app, $configArray);
+        $configuration = new TestConfiguration($this->app, $this->app->config['cronboard']);
 
         $this->app['cronboard']->loadConfiguration($configuration);
 
         $this->app->instance(Storage::class, new TestStorage);
+        $this->app->instance(Client::class, $client = $this->app->make(TestClient::class));
+
+        $this->app['cronboard']->setClient($client);
     }
 }

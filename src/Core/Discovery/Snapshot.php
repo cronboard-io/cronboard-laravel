@@ -89,7 +89,7 @@ class Snapshot
     protected function getTasksForStorage(): Collection
     {
         return $this->getTasks()->filter(function($task) {
-            return !$task->isSingleExecution() && !$task->isRuntimeTask();
+            return ! $task->isImmediateTask() && ! $task->isRuntimeTask();
         });
     }
 

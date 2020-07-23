@@ -21,7 +21,7 @@ class FromClass
         return $this->getCommandFromClass($class);
     }
 
-    public function buildWithInstance($class, $instance = null): ?Command
+    public function buildWithInstance(string $class, $instance = null): ?Command
     {
         return $this->getCommandFromClass($class, $instance);
     }

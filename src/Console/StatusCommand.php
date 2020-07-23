@@ -2,7 +2,7 @@
 
 namespace Cronboard\Console;
 
-use Cronboard\Core\Api\Endpoints\Account;
+use Cronboard\Core\Api\Client;
 use Illuminate\Console\Command;
 
 class StatusCommand extends Command
@@ -30,11 +30,14 @@ class StatusCommand extends Command
      */
     public function handle()
     {
-        if (!$this->validateCronboardConfiguration()) {
+        if (! $this->validateCronboardConfiguration()) {
             return 1;
         }
 
-        $info = $this->laravel->make(Account::class)->info();
+        $info = $this->laravel
+            ->make(Client::class)
+            ->account()
+            ->info();
 
         $row = [
             'Ready',

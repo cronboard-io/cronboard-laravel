@@ -4,7 +4,6 @@ namespace Cronboard\Core\Reflection\Parameters;
 
 use Cronboard\Core\Reflection\Parameters\Primitive\BooleanParameter;
 use Cronboard\Core\Reflection\Parameters\Primitive\DoubleParameter;
-use Cronboard\Core\Reflection\Parameters\Primitive\FloatParameter;
 use Cronboard\Core\Reflection\Parameters\Primitive\IntegerParameter;
 use Cronboard\Core\Reflection\Parameters\Primitive\StringParameter;
 use Illuminate\Contracts\Container\Container;
@@ -95,6 +94,9 @@ abstract class Parameter implements Arrayable
         return !! $this->required;
     }
 
+    /**
+     * @param bool|int|null|string|string[] $default
+     */
     public function setDefault($default): Parameter
     {
         $this->default = $default;
@@ -127,9 +129,6 @@ abstract class Parameter implements Arrayable
         if (is_double($value)) {
             return 'double';
         }
-        if (is_float($value)) {
-            return 'float';
-        }
         if (is_numeric($value)) {
             return 'int';
         }
@@ -141,7 +140,7 @@ abstract class Parameter implements Arrayable
 
     public static function getPrimitiveTypes(): array
     {
-        return ['boolean', 'double', 'float', 'int', 'string'];
+        return ['boolean', 'double', 'int', 'string'];
     }
 
     public static function getPrimitiveParameterClassForType(string $type)
@@ -152,9 +151,6 @@ abstract class Parameter implements Arrayable
             }
             if ($type === 'double') {
                 return DoubleParameter::class;
-            }
-            if ($type === 'float') {
-                return FloatParameter::class;
             }
             if ($type === 'int') {
                 return IntegerParameter::class;

@@ -8,17 +8,17 @@ abstract class Module
     abstract public function toArray(): array;
     abstract public function getHooks(): array;
 
-    public function onContextEnter()
+    public function onContextEnter(): void
     {
         //
     }
 
-    public function onContextFinalise()
+    public function onContextFinalise(): void
     {
         //
     }
 
-    public function onContextExit()
+    public function onContextExit(): void
     {
         //
     }

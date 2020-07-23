@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 class Composer
 {
-    public static function getAutoloadedFiles($composerJsonPath): array
+    public static function getAutoloadedFiles(string $composerJsonPath): array
     {
         $composerContents = static::getComposerContents($composerJsonPath);
 
@@ -22,7 +22,7 @@ class Composer
         }, $paths);
     }
 
-    public static function getComposerContents($composerJsonPath): array
+    public static function getComposerContents(string $composerJsonPath): array
     {
         if (!file_exists($composerJsonPath)) {
             return [];

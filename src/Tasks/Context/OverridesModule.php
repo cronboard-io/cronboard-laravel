@@ -45,12 +45,12 @@ class OverridesModule extends Module
         return $hookName === 'setOverrides';
     }
 
-    public function onContextEnter()
+    public function onContextEnter(): void
     {
         $this->executeContextOverrides();
     }
 
-    public function onContextExit()
+    public function onContextExit(): void
     {
         $this->rollbackContextOverrides();
     }
@@ -65,7 +65,7 @@ class OverridesModule extends Module
         return $this->overrides;
     }
 
-    private function formatValueFromStorage($value)
+    private function formatValueFromStorage(array $value)
     {
         return (new ParseContext)->execute($value);
     }

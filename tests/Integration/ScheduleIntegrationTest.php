@@ -3,10 +3,12 @@
 namespace Cronboard\Tests\Integration;
 
 use Closure;
-use Cronboard\Core\Api\Endpoints\Tasks;
+use Cronboard\Core\Api\Client;
+use Cronboard\Core\Context\TaskContext;
 use Cronboard\Core\Cronboard;
 use Cronboard\Core\Discovery\DiscoverTasksViaScheduler;
 use Cronboard\Core\Discovery\Snapshot;
+use Cronboard\Core\Schedule as CronboardSchedule;
 use Cronboard\Support\FrameworkInformation;
 use Cronboard\Tasks\Task;
 use Cronboard\Tests\Stubs\ConfigurableConsoleKernel;
@@ -27,14 +29,17 @@ abstract class ScheduleIntegrationTest extends TestCase
     {
         parent::setUp();
 
-        $this->tasks = $this->app->instance(Tasks::class, $tasks = m::mock(Tasks::class));
+        // $this->tasks = $this->app->instance(Tasks::class, $tasks = m::mock(Tasks::class));
+        $this->tasks = $this->app->make(Client::class)->mockEndpoint($this->app, 'tasks');
+
+        TaskContext::exit();
     }
 
     protected function getSchedule()
     {
-        return $this->app['cronboard.connector']->reconnect(
-            $this->app->make(Schedule::class)
-        );
+        $schedule = $this->app->make(Schedule::class);
+        $schedule = CronboardSchedule::createWithEventsFrom($schedule);
+        return $schedule;
     }
 
     protected function loadTasksIntoCronboard()
@@ -44,7 +49,11 @@ abstract class ScheduleIntegrationTest extends TestCase
             $task->setCronboardTask(true);
         });
         $snapshot = new Snapshot($this->app, $commandsAndTasks['commands'], $tasks);
-        $this->cronboard = $this->app->make(Cronboard::class)->loadSnapshot($snapshot);
+
+        $this->cronboard = $this->app->make(Cronboard::class);
+        $this->cronboard->loadSnapshot($snapshot);
+
+        return $this->cronboard;
     }
 
     protected function resolveApplicationConsoleKernel($app)
@@ -58,19 +67,22 @@ abstract class ScheduleIntegrationTest extends TestCase
 
     abstract protected function modifySchedule(Schedule $schedule): Schedule;
 
-    protected function assertTaskEvent(string $event, Task $task, Closure $contextArgumentMatcher = null)
+    protected function assertTaskEvent(string $event, Task $task = null, Closure $contextArgumentMatcher = null)
     {
         $contextArgument = ! empty($contextArgumentMatcher) ? m::on($contextArgumentMatcher) : m::any();
 
         return $this->tasks->shouldReceive($event)->with(m::on(function($runtimeTask) use ($task) {
-            return $runtimeTask->getKey() === $task->getKey();
+            return empty($task) || $runtimeTask->getKey() === $task->getKey();
         }), $contextArgument)->once();
     }
 
-    protected function assertTaskEventNotFired(string $event, Task $task)
+    protected function assertTaskEventNotFired(string $event, Task $task = null)
     {
         return $this->tasks->shouldNotReceive($event)->with(m::on(function($runtimeTask) use ($task) {
-            return $runtimeTask->getKey() === $task->getKey();
+            if ($task) {
+                return $runtimeTask->getKey() === $task->getKey();    
+            }
+            return true;
         }), m::any());
     }
 }

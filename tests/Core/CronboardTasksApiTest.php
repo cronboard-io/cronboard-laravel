@@ -1,9 +1,10 @@
 <?php
 
-namespace Cronboard\Tests\Tasks;
+namespace Cronboard\Tests\Core;
 
 use Cronboard\Commands\Command;
-use Cronboard\Core\Api\Endpoints\Tasks;
+use Cronboard\Core\Api\Client;
+use Cronboard\Core\Context\TaskContext;
 use Cronboard\Core\Cronboard;
 use Cronboard\Core\Reflection\Parameters;
 use Cronboard\Tasks\Task;
@@ -22,13 +23,13 @@ class CronboardTasksApiTest extends TestCase
             $constraints = []
         );
 
-        $this->app->instance(Tasks::class, $tasks = m::mock(Tasks::class));
+        $tasks = $this->app->make(Client::class)->mockEndpoint($this->app, 'tasks');
 
         $cronboard = $this->app->make(Cronboard::class);
-        $cronboard->setTaskContext($task);
+        $runtime = TaskContext::enter($task);
 
-        $this->assertNotNull($taskContext = $cronboard->getContext());
-        $this->assertEquals($taskContext->getTask(), 'taskKey');
+        $this->assertNotNull(TaskContext::getTask());
+        $this->assertEquals(TaskContext::getTask()->getKey(), 'taskKey');
 
         $tasks->shouldReceive('start')->with(m::on(function($runtimeTask) {
             return $runtimeTask->getKey() === 'taskKey';
@@ -38,7 +39,7 @@ class CronboardTasksApiTest extends TestCase
         ]);
 
         $this->assertTrue($cronboard->start($task));
-        $this->assertNotNull($taskContext2 = $cronboard->getContext());
-        $this->assertEquals($taskContext2->getTask(), 'taskInstanceKey');
+        $this->assertNotNull(TaskContext::getTask());
+        $this->assertEquals(TaskContext::getTask()->getKey(), 'taskInstanceKey');
     }
 }

@@ -122,21 +122,24 @@ abstract class ExecuteTask
 
     protected function getPlaceholderValueForRequiredParameter(Parameter $parameter)
     {
-        if ($parameter->getRequired()) {
-            if (in_array($type = $parameter->getType(), Parameter::getPrimitiveTypes())) {
-                if (in_array($type, ['double', 'float', 'int'])) {
-                    return 0;
-                }
-                if ($type === 'boolean') {
-                    return false;
-                }
-                if ($type === 'string') {
-                    return '';
-                }
-            } else if ($parameter instanceof ArrayParameter) {
-                return [];
-            }
+        if (! $parameter->getRequired()) {
+            return null;
         }
+
+        if (in_array($type = $parameter->getType(), Parameter::getPrimitiveTypes())) {
+            if (in_array($type, ['double', 'float', 'int'])) {
+                return 0;
+            }
+            if ($type === 'boolean') {
+                return false;
+            }
+            if ($type === 'string') {
+                return '';
+            }
+        } else if ($parameter instanceof ArrayParameter) {
+            return [];
+        }
+
         return null;
     }
 

@@ -2,52 +2,56 @@
 
 namespace Cronboard\Console;
 
-use Cronboard\Core\Exceptions\Exception;
-use Cronboard\Core\Exceptions\ExceptionListener;
+use Cronboard\Core\Exception;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Output implements ExceptionListener
+class Output
 {
     protected $output;
 
-    public function __construct(OutputInterface $output)
+    public function __construct(OutputInterface $output = null)
     {
-        $this->output = $output;
+        $this->output = $output ?: new ConsoleOutput;
 
         // define styles to be used for console output
         $this->defineOutputStyles();
     }
 
-    public function onException(Exception $exception)
+    public function outputException(Exception $exception): Output
     {
-        $this->disabled($exception->getMessage());
+        return $this->disabled($exception->getMessage());
     }
 
-    public function silent(string $text)
+    public function silent(string $text): Output
     {
-        $this->line($text, 'silent');
+        return $this->line($text, 'silent');
     }
 
-    public function disabled(string $text)
+    public function disabled(string $text): Output
     {
-        $this->line($text, 'disabled');
+        return $this->line($text, 'disabled');
     }
 
-    public function error(string $text)
+    public function error(string $text): Output
     {
-        $this->line($text, 'error');
+        return $this->line($text, 'error');
     }
 
-    public function comment(string $text)
+    public function comment(string $text): Output
     {
-        $this->line($text, 'comment');
+        return $this->line($text, 'comment');
     }
 
-    public function line($string, $style = null)
+    /**
+     * @param null|string $style
+     */
+    public function line(string $string, ?string $style = null): Output
     {
         $styled = $style ? "<$style>$string</$style>" : $string;
         $this->output->writeln($styled);
+        return $this;
     }
 
     private function defineOutputStyles()

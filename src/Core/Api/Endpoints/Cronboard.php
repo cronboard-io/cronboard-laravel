@@ -30,7 +30,7 @@ class Cronboard extends Endpoint
         return $this->post('cronboard/record', $payload);
     }
 
-    public function cronboard(string $env = null)
+    public function schedule(string $env = null)
     {
         $query = http_build_query(array_filter(compact('env')));
         return $this->get('cronboard' . ($query ? '?' . $query : ''));

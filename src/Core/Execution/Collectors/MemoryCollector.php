@@ -21,8 +21,12 @@ class MemoryCollector extends Collector
         $this->memoryUsageInBytes = memory_get_peak_usage($this->realUsage);
     }
 
-    private function memoryLimitToBytes($memoryLimit)
+    private function memoryLimitToBytes($memoryLimit): ?string
     {
+        if ($memoryLimit === false) {
+            return null;
+        }
+
         $memoryLimit = trim($memoryLimit);
         $last = strtolower($memoryLimit[strlen($memoryLimit) - 1]);
         $memoryLimit = substr($memoryLimit, 0, -1);

@@ -2,6 +2,7 @@
 
 namespace Cronboard\Support;
 
+use Cronboard\Core\Cronboard;
 use Cronboard\Support\Composer;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Support\Arrayable;
@@ -39,7 +40,7 @@ class Environment implements Arrayable
     private function getProjectInformation(): array
     {
         return [
-            'project_name' => $this->app['config']['app']['name'] ?? null,
+            'project.name' => $this->app['config']['app']['name'] ?? null,
             'timezone' => $this->app['config']['app']['timezone'] ?? 'UTC',
             'environment' => $this->app['config']['app']['env'] ?? 'production',
             'framework' => 'Laravel',
@@ -49,7 +50,7 @@ class Environment implements Arrayable
     private function getLaravelInformation(): array
     {
         return [
-            'laravel_version' => $this->app->version(),
+            'laravel.version' => $this->app->version(),
         ];
     }
 
@@ -60,14 +61,15 @@ class Environment implements Arrayable
         $requiredVersion = $composerContents['require'][$package] ?? null;
         $requiredVersionDev = $composerContents['require-dev'][$package] ?? null;
         return [
-                'client_version' => $requiredVersion ?: ($requiredVersionDev ?: null)
+            'client.version' => $requiredVersion ?: ($requiredVersionDev ?: null),
+            'cronboard.version' => defined(Cronboard::class . '::VERSION') ? Cronboard::VERSION : null,
         ];
     }
 
     private function getEnvironmentInformation(): array
     {
         return [
-            'php_version' => phpversion()
+            'php.version' => phpversion()
         ];
     }
 }

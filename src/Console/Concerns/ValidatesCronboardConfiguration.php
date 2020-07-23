@@ -2,7 +2,7 @@
 
 namespace Cronboard\Console\Concerns;
 
-use Cronboard\Core\Config\Configuration;
+use Cronboard\Core\Configuration;
 
 trait ValidatesCronboardConfiguration
 {

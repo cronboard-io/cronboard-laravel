@@ -2,31 +2,32 @@
 
 namespace Cronboard\Core\Concerns;
 
-use Cronboard\Core\Api\Exception;
-use Cronboard\Core\Config\Configuration;
-use Cronboard\Core\Config\ConfigurationException;
+use Cronboard\Core\Configuration;
+use Cronboard\Core\Context\TaskContext;
 use Cronboard\Core\Discovery\DiscoverCommandsAndTasks;
 use Cronboard\Core\Discovery\Snapshot;
+use Cronboard\Core\Exception as CronboardException;
 use Cronboard\Core\ExtendSnapshotWithRemoteTasks;
 use Cronboard\Support\CommandContext;
-use Cronboard\Integrations\Integrations;
-use Illuminate\Console\Command;
+use Cronboard\Tasks\Resolver;
+use Exception;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Collection;
-use Log;
 
 trait Boot
 {
-    protected $config;
-
     protected $booted = false;
     protected $booting = false;
-    protected $offline = false;
 
-    protected $commandsWithRemoteAccess = [];
+    abstract protected function getConfiguration(): Configuration;
+    abstract protected function bootErrorHandling();
+    abstract protected function reportException(Exception $exception);
+    abstract public function loadSnapshot(Snapshot $snapshot);
+    abstract public function trackSchedule(Schedule $schedule);
 
     public function ready(): bool
     {
-        return $this->config->getEnabled() && $this->config->hasToken();
+        return $this->getConfiguration()->getEnabled() && $this->getConfiguration()->hasToken();
     }
 
     public function booted(): bool
@@ -34,53 +35,70 @@ trait Boot
         return $this->booted;
     }
 
-    public function boot(): bool
+    public function boot(bool $reboot = false): bool
     {
-        if ($this->ready() && !$this->booted() && !$this->booting) {
+        if ($this->ready() && (! $this->booted || $reboot) && ! $this->booting) {
             $this->booting = true;
 
-            $discoverAction = new DiscoverCommandsAndTasks($this->app);
-            $snapshot = $discoverAction->getSnapshot();
-
-            if ($discoverAction->snapshotWasInvalid()) {
-                $this->getOutput()
-                    ->error('Cronboard snapshot appears to be invalid. Please make sure to run `cronboard:record` after changes to your codebase');
-            }
-
             try {
-                if ($this->shouldContactRemote($snapshot)) {
-                    $this->app->make(Configuration::class)->check();
-                    $snapshot = (new ExtendSnapshotWithRemoteTasks($this->app))->execute($snapshot);
+                if (! $reboot) {
+                    $this->bootErrorHandling();
+                    $this->getConfiguration()->check();
                 }
-            } catch (ConfigurationException $exception) {
-                $this->reportException($exception);
+
+                $this->bootFromSnapshot();
+                $this->bootCurrentTaskContext();
+            } catch (Exception $e) {
+                $this->reportException($e);
             }
 
-            $this->loadSnapshot($snapshot);
-
-            $this->loadCurrentTaskContextFromEnvironment();
-
-            $this->booting = false;
             $this->booted = true;
+            $this->booting = false;
+
+            $this->bootSchedule($reboot);
 
             return true;
         }
 
-        return $this->booted();
+        return false;
     }
 
-    public function allowRemoteAccessForCommand($command)
+    public function reboot(): bool
     {
-        $commandToAdd = null;
+        return $this->boot(true);
+    }
 
-        if ($command instanceof Command) {
-            $commandToAdd = $command->getName();
-        } else if (is_string($command)) {
-            $commandToAdd = $command;
+    private function bootSchedule(bool $reboot = false)
+    {
+        $schedule = $this->app[Schedule::class];
+        $schedule->prepare($this->app, $reboot);
+        $this->trackSchedule($schedule);
+    }
+
+    private function bootFromSnapshot()
+    {
+        $discoverAction = new DiscoverCommandsAndTasks($this->app);
+        $snapshot = $discoverAction->getSnapshot();
+
+        if ($discoverAction->snapshotWasInvalid()) {
+            $this->reportException(new CronboardException('Cronboard snapshot appears to be invalid. Please make sure to run `cronboard:record` after changes to your codebase'));
         }
 
-        if (! is_null($commandToAdd)) {
-            $this->commandsWithRemoteAccess[] = $commandToAdd;
+        if ($this->shouldContactRemote($snapshot)) {
+            $snapshot = (new ExtendSnapshotWithRemoteTasks($this->app))->execute($snapshot);
+        }
+
+        $this->loadSnapshot($snapshot);
+    }
+
+    private function bootCurrentTaskContext()
+    {
+        $key = Resolver::resolveFromEnvironment();
+        if ($key) {
+            $task = $this->getTasks()->get($key);
+            if ($task) {
+                TaskContext::enter($task);
+            }
         }
     }
 
@@ -97,34 +115,6 @@ trait Boot
     private function getCommandsWithRemoteAccess(Snapshot $snapshot): Collection
     {
         $acceptedConsoleCommands = $snapshot->getCommands()->filter->isConsoleCommand()->map->getAlias();
-
-        return $acceptedConsoleCommands
-            ->merge(['schedule:run', 'schedule:finish'])
-            ->merge($this->commandsWithRemoteAccess)
-            ->merge(Integrations::getAdditionalScheduleCommands());
-    }
-
-    private function setOffline(bool $offline)
-    {
-        $this->offline = $offline;
-    }
-
-    protected function ensureHasBooted(): bool
-    {
-        if (!$this->booted()) {
-            return $this->boot();
-        }
-        return true;
-    }
-
-    public function isOffline(): bool
-    {
-        return $this->offline;
-    }
-
-    public function setOfflineDueTo(Exception $e)
-    {
-        $this->setOffline(true);
-        Log::warning($e->getMessage());
+        return $acceptedConsoleCommands->merge(['schedule:run', 'schedule:finish', 'queue:work', 'queue:listen']);
     }
 }

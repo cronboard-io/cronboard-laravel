@@ -16,6 +16,5 @@ class JobCommand implements ShouldQueue
 
     public function handle()
     {
-
     }
 }

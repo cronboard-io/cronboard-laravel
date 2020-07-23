@@ -2,14 +2,14 @@
 
 namespace Cronboard\Core;
 
-use Cronboard\Core\Api\Endpoints\Cronboard;
+use Cronboard\Core\Api\Client;
 use Cronboard\Core\Api\Exception;
 use Cronboard\Core\Discovery\HandlesSnapshotStorage;
 use Cronboard\Core\Discovery\Snapshot;
 use Cronboard\Core\Reflection\ParseParameters;
 use Cronboard\Support\Environment;
 use Cronboard\Tasks\Task;
-use Cronboard\Tasks\TaskContext;
+use Cronboard\Tasks\TaskRuntime;
 use Illuminate\Container\Container;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -38,7 +38,10 @@ class ExtendSnapshotWithRemoteTasks
             $environment = Arr::get($environmentInfo, 'environment');
 
             // get remote tasks
-            $response = $this->app->make(Cronboard::class)->cronboard($environment);
+            $response = $this->app->make(Client::class)
+                ->cronboard()
+                ->schedule($environment);
+
             $scheduleTasksPayload = Collection::wrap($response['tasks']);
             $tasksPayload = $scheduleTasksPayload->merge($response['queuedTasks']);
 
@@ -58,7 +61,7 @@ class ExtendSnapshotWithRemoteTasks
             $this->storeSnapshot($snapshot);
 
             // load contexts for all tasks and store locally
-            $this->loadTaskContext($tasksPayload, $taskAliases);
+            $this->loadTaskRuntime($tasksPayload, $taskAliases);
 
         } catch (Exception $e) {
             // report exception and return snapshot untouched
@@ -87,35 +90,34 @@ class ExtendSnapshotWithRemoteTasks
                 return null;
             })->filter()->values();
 
-            if (!$aliasedTasks->isEmpty()) {
+            if (! $aliasedTasks->isEmpty()) {
                 return $aliasedTasks;
             }
         }
         return new Collection;
     }
 
-    protected function loadTaskContext(Collection $tasksPayload, array $taskAliases)
+    protected function loadTaskRuntime(Collection $tasksPayload, array $taskAliases)
     {
-        $contextStorage = TaskContext::getStorage($this->app);
-        $contextStorage->empty();
+        $runtimeStorage = TaskRuntime::getStorage();
+        $runtimeStorage->empty();
 
         $tasksPayloadByKey = $tasksPayload->keyBy('key');
 
         foreach ($tasksPayloadByKey as $taskKey => $taskData) {
-            $context = new TaskContext($this->app, $taskKey);
-
-            $this->applyRuntimeDataToContext($context, $taskData);
+            $runtime = TaskRuntime::fromTaskKey($taskKey);
+            $this->applyDataToRuntime($runtime, $taskData);
         }
 
         foreach ($taskAliases as $aliasedTaskKey => $taskKey) {
-            $context = TaskContext::inheritTaskContext($this->app, $aliasedTaskKey, $taskKey);
+            $runtime = TaskRuntime::inheritTaskRuntime($aliasedTaskKey, $taskKey);
 
             $taskData = $tasksPayloadByKey[$aliasedTaskKey] ?? ($tasksPayloadByKey[$taskKey] ?? []);
-            $this->applyRuntimeDataToContext($context, $taskData);
+            $this->applyDataToRuntime($runtime, $taskData);
         }
     }
 
-    protected function applyRuntimeDataToContext(TaskContext $context, array $taskData)
+    protected function applyDataToRuntime(TaskRuntime $runtime, array $taskData)
     {
         $defaultContext = [
             'silent' => 0,
@@ -125,10 +127,10 @@ class ExtendSnapshotWithRemoteTasks
 
         $taskData = array_merge($defaultContext, $taskData);
 
-        $context->setTracking(!$taskData['silent']);
-        $context->setActive($taskData['active']);
-        $context->setOnce($taskData['once']);
-        $context->setOverrides($taskData['overrides'] ?? []);
+        $runtime->setTracking(!$taskData['silent']);
+        $runtime->setActive($taskData['active']);
+        $runtime->setOnce($taskData['once']);
+        $runtime->setOverrides($taskData['overrides'] ?? []);
     }
 
     protected function createTasksFromPayload(Collection $tasksPayload, Snapshot $snapshot): Collection
@@ -154,7 +156,7 @@ class ExtendSnapshotWithRemoteTasks
         $task->setDetails(Arr::only($taskData, 'name'));
 
         $task->setCronboardTask(true);
-        $task->setSingleExecution($taskData['once']);
+        $task->setImmediateTask($taskData['once']);
 
         return $task;
     }

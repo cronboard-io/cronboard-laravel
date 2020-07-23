@@ -1,6 +1,6 @@
 <?php
 
-namespace Cronboard\Core\Exceptions;
+namespace Cronboard\Core;
 
 use Throwable;
 

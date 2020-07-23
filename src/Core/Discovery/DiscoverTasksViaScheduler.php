@@ -49,9 +49,7 @@ class DiscoverTasksViaScheduler
 
     public function getTasks(): Collection
     {
-        // swap connectable with recorder
         $this->recorder = $recorder = new Recorder;
-        $this->app['cronboard.connector']->swapTemporary($this->recorder);
 
         $this->invokeKernelSchedule();
 
@@ -67,9 +65,6 @@ class DiscoverTasksViaScheduler
             }
             return $task ?? null;
         })->filter();
-
-        // swap back to original connectable
-        $this->app['cronboard.connector']->restore();
 
         return $tasks;
     }

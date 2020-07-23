@@ -76,13 +76,13 @@ class LoadRemoteTasksIntoSchedule
 
     protected function isLoaded(Schedule $schedule, Task $task)
     {
-        $key = spl_object_id($schedule);
+        $key = spl_object_hash($schedule);
         return in_array($task->getKey(), static::$loadedTasks[$key] ?? []);
     }
 
     protected function rememberAsLoaded(Schedule $schedule, Task $task)
     {
-        $key = spl_object_id($schedule);
+        $key = spl_object_hash($schedule);
         $loadedTasks = static::$loadedTasks[$key] ?? [];
         $loadedTasks[] = $task->getKey();
         static::$loadedTasks[$key] = $loadedTasks;

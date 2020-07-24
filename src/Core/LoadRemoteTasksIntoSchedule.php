@@ -56,7 +56,7 @@ class LoadRemoteTasksIntoSchedule
             return $schedule;
         }
 
-        $customTasksToLoad = $this->cronboard->getTasks()->filter(function($task) use ($schedule) {
+        $customTasksToLoad = $this->cronboard->getTasks()->filter(function($task) {
             $isQueuedTask = $task->isRuntimeTask() && ! $task->isImmediateTask();
             return $task->isCronboardTask() && 
                 ! $isQueuedTask && 

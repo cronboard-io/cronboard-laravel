@@ -43,7 +43,7 @@ trait Boot
             try {
                 if (! $reboot) {
                     $this->bootErrorHandling();
-                    $this->getConfiguration()->check();
+                    $this->getConfiguration()->assertTokenFound();
                 }
 
                 $this->bootFromSnapshot();

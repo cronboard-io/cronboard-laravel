@@ -63,9 +63,11 @@ class ExtendSnapshotWithRemoteTasks
             // load contexts for all tasks and store locally
             $this->loadTaskRuntime($tasksPayload, $taskAliases);
 
-        } catch (Exception $e) {
-            // report exception and return snapshot untouched
-            $this->cronboard->reportException($e);
+        } catch (Exception $exception) {
+            if ($exception->getStatusCode() === 401) {
+                throw ConfigurationException::tokenNotValid($exception);
+            }
+            $this->cronboard->reportException($exception);
         }
 
         return $snapshot;

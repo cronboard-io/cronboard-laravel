@@ -16,6 +16,7 @@ trait Tracking
 {
     abstract protected function getConsoleOutput();
     abstract public function getTaskForEvent(Event $event): ?Task;
+    abstract public function queue(Task $task): ?Task;
 
     public function trackEvent(Event $event)
     {

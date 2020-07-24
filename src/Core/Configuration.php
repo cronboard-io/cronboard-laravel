@@ -7,8 +7,6 @@ use Cronboard\Core\Api\Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Arr;
 
-class ConfigurationException extends Exception {}
-
 class Configuration
 {
     protected $app;
@@ -21,15 +19,24 @@ class Configuration
         $this->config = $config;
     }
 
-    public function check()
+    public function assertTokenFound()
     {
         if (! $this->hasToken()) {
-            throw new ConfigurationException(400, 'No Cronboard.io token found. Try setting \'CRONBOARD_TOKEN\' in your .env file first.');
+            throw ConfigurationException::noTokenFound();
         }
+    }
 
+    public function assertTokenValid()
+    {
         if (! $this->isTokenValid()) {
-            throw ($this->apiException ?: new ConfigurationException(400, 'Your Cronboard.io token is not valid. Please verify you\'ve added the correct token in your .env file.'));
+            throw ConfigurationException::tokenNotValid($this->apiException);
         }
+    }
+
+    public function check()
+    {
+        $this->assertTokenFound();
+        $this->assertTokenValid();
     }
 
     public function getBaseUrl(): string

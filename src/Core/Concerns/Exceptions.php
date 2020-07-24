@@ -9,6 +9,7 @@ use Cronboard\Core\Context\TaskContext;
 use Cronboard\Core\Exception as CronboardException;
 use Cronboard\Core\Execution\Events\TaskFailed;
 use Exception;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Log\Events\MessageLogged;
@@ -19,10 +20,11 @@ trait Exceptions
     protected $offline = false;
 
     abstract protected function getConfiguration(): Configuration;
+    abstract protected function getApplication(): Container;
 
     protected function bootErrorHandling()
     {
-        if ($this->app->runningInConsole()) {
+        if ($this->getApplication()->runningInConsole()) {
             $this->consoleOutput = new Output;
         }
     }
@@ -39,7 +41,7 @@ trait Exceptions
         if ($exception) {
             $task = TaskContext::getTask();
             if ($task)     {
-                $this->app->make(Dispatcher::class)->dispatch(new TaskFailed($task, $exception));
+                $this->getApplication()->make(Dispatcher::class)->dispatch(new TaskFailed($task, $exception));
             }
         }
     }
@@ -63,7 +65,7 @@ trait Exceptions
 
         if ($this->getConfiguration()->shouldSilenceExternalErrors() || $this->offline) {
             if ($this->getConfiguration()->shouldForwardExternalErrorsToHandler()) {
-                $this->app->make(ExceptionHandler::class)->report($exception);
+                $this->getApplication()->make(ExceptionHandler::class)->report($exception);
             }
         } else {
             throw $exception;

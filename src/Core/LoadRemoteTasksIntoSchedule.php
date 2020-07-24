@@ -33,28 +33,37 @@ class LoadRemoteTasksIntoSchedule
         $this->cronboard = $app['cronboard'];
     }
 
-    public function execute(Schedule $schedule)
+    protected function shouldLoadTasks(): bool
     {
         $commandContext = $this->app->make(CommandContext::class);
 
         // if we're not running the schedule - no need to load remote commands
         if (! $commandContext->inCommandsContext($this->getScheduleRunCommands())) {
-            return $schedule;
+            return false;
         }
 
         // cronboard has not been boostrapped and we ignore pulling remote tasks
         if (! $this->cronboard->booted()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function execute(Schedule $schedule)
+    {
+        if (! $this->shouldLoadTasks()) {
             return $schedule;
         }
 
-        $customTasks = $this->cronboard->getTasks()->filter(function($task) {
+        $customTasksToLoad = $this->cronboard->getTasks()->filter(function($task) use ($schedule) {
             $isQueuedTask = $task->isRuntimeTask() && ! $task->isImmediateTask();
-            return $task->isCronboardTask() && ! $isQueuedTask;
+            return $task->isCronboardTask() && 
+                ! $isQueuedTask && 
+                $task->getCommand()->exists();
         });
 
-        foreach ($customTasks as $customTask) {
-            if (! $customTask->getCommand()->exists()) continue;
-
+        foreach ($customTasksToLoad as $customTask) {
             if (! $this->isLoaded($schedule, $customTask)) {
                 $event = $this->addTaskToSchedule($schedule, $customTask);
 

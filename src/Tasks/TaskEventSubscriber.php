@@ -169,12 +169,8 @@ class TaskEventSubscriber
 
     private function getTaskFromJob(Job $job): ?Task
     {
-        $payload = $job->payload();
-        if ($serializedJob = Arr::get($payload, 'data.command')) {
-            $job = unserialize($serializedJob);
-            if (isset($job->task)) {
-                return $this->cronboard->getTaskByKey($job->task);
-            }
+        if ($key = Helpers::getTrackedJobTaskKey($job)) {
+            return $this->cronboard->getTaskByKey($key);
         }
     	return null;
     }

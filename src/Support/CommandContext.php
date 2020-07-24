@@ -58,4 +58,24 @@ class CommandContext
 
         return $commandName;
     }
+
+    public function getSchedulerContextCommands(): array
+    {
+        return ['schedule:run', 'schedule:finish'];
+    }
+
+    public function getQueueWorkerContextCommands(): array
+    {
+        return ['queue:work', 'queue:listen'];
+    }
+
+    public function isSchedulerContext(): bool
+    {
+        return $this->inCommandsContext(new Collection($this->getSchedulerContextCommands()));
+    }
+
+    public function isQueueWorkerContext(): bool
+    {
+        return $this->inCommandsContext(new Collection($this->getQueueWorkerContextCommands()));
+    }
 }

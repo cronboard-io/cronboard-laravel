@@ -14,6 +14,7 @@ use Cronboard\Core\LoadRemoteTasksIntoSchedule;
 use Cronboard\Core\Schedule as CronboardSchedule;
 use Cronboard\Facades\Cronboard as CronboardFacade;
 use Cronboard\Runtime;
+use Cronboard\Support\CommandContext;
 use Cronboard\Support\FrameworkInformation;
 use Cronboard\Support\Helpers;
 use Cronboard\Support\QueueDispatcherWrapper;
@@ -63,7 +64,10 @@ class CronboardServiceProvider extends ServiceProvider
             ]);
 
             Queue::before(function(JobProcessing $event) {
-                $this->app['cronboard']->reboot();
+                if (Helpers::isActiveTrackedJob($event->job)) {
+                    $isQueueContext = (new CommandContext($this->app))->isQueueWorkerContext();
+                    $this->app['cronboard']->boot($isQueueContext);
+                }
             });
 
             Event::listen(ArtisanStarting::class, function() {
@@ -76,7 +80,7 @@ class CronboardServiceProvider extends ServiceProvider
             CronboardSchedule::mixin(new TrackedScheduleMixin);
 
             if (Helpers::usesTrait(Schedule::class, Macroable::class)) {
-                Schedule::mixin(new TrackedScheduleMixin);    
+                Schedule::mixin(new TrackedScheduleMixin);
             }
 
             $this->addTrackingToQueueDispatcher($this->app);

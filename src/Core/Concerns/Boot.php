@@ -106,15 +106,12 @@ trait Boot
     {
         if (! $this->app->runningInConsole()) return true;
 
-        $commandsWithRemoteAccess = $this->getCommandsWithRemoteAccess($snapshot);
         $commandContext = new CommandContext($this->app);
 
-        return $commandContext->inCommandsContext($commandsWithRemoteAccess);
-    }
+        $commandsWithRemoteAccess = $snapshot->getCommands()->filter->isConsoleCommand()->map->getAlias()
+            ->merge($commandContext->getSchedulerContextCommands())
+            ->merge($commandContext->getQueueWorkerContextCommands());
 
-    private function getCommandsWithRemoteAccess(Snapshot $snapshot): Collection
-    {
-        $acceptedConsoleCommands = $snapshot->getCommands()->filter->isConsoleCommand()->map->getAlias();
-        return $acceptedConsoleCommands->merge(['schedule:run', 'schedule:finish', 'queue:work', 'queue:listen']);
+        return $commandContext->inCommandsContext($commandsWithRemoteAccess);
     }
 }

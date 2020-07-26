@@ -52,10 +52,16 @@ class InvokableCommandScheduleTest extends ScheduleIntegrationTest
         $this->assertEquals($invokableEvent->getTaskKey(), $task->getKey());
 
         // task queued
-        $this->assertTaskEvent('queue', $task);
+        $this->assertTaskEvent('queue', $task)->andReturn([
+            'success' => true,
+            'key' => $task->getKey()
+        ]);
 
         // task started
-        $this->assertTaskEvent('start', $task);
+        $this->assertTaskEvent('start', $task)->andReturn([
+            'success' => true,
+            'key' => $task->getKey()
+        ]);
 
         // task ended
         $this->assertTaskEvent('end', $task, function($context) {
@@ -67,6 +73,46 @@ class InvokableCommandScheduleTest extends ScheduleIntegrationTest
         
         $this->tasks->allows('fail');
 
+        $invokableEvent->run($this->app);
+    }
+
+    /** @test */
+    public function it_does_not_start_task_if_queue_failed()
+    {
+        // invokables not supported before Laravel 5.7.3
+        if ($this->getLaravelVersionAsInteger() < 5730) {
+            $this->assertTrue(true);
+            return;
+        }
+
+        // make sure tasks are loaded in Cronboard
+        $cronboard = $this->loadTasksIntoCronboard();
+
+        // manually boot since we're not going through artisan
+        $cronboard->boot();
+
+        // get events
+        $events = $this->getSchedule()->dueEvents($this->app);
+
+        $this->assertEquals(1, $events->count());
+        $invokableEvent = $events[0];
+
+        $this->assertEquals(1, $cronboard->getTasks()->count());
+        $task = $cronboard->getTasks()->first();
+
+        $this->assertEquals($invokableEvent->getTaskKey(), $task->getKey());
+
+        // task queued
+        $this->assertTaskEvent('queue', $task)->andReturn([
+            'success' => false,
+        ]);
+
+        // task started
+        $this->assertTaskEventNotFired('start', $task);
+
+        // task ended
+        $this->assertTaskEventNotFired('end', $task);
+        
         $invokableEvent->run($this->app);
     }
 }

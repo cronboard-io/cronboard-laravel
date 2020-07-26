@@ -4,6 +4,7 @@ namespace Cronboard\Tests\Integration;
 
 use Cronboard\Core\Cronboard;
 use Cronboard\Facades\Cronboard as CronboardFacade;
+use Cronboard\Tasks\TaskRuntime;
 use Cronboard\Tests\Integration\Commands\JobCommand;
 use Cronboard\Tests\Integration\Commands\QueuedJobCommand;
 use Cronboard\Tests\Integration\Commands\SyncJobCommand;
@@ -54,8 +55,8 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->assertNotEmpty($events[0]->getTaskKey());
 
         $syncTask = $cronboard->getTasks()->values()[0];
-        $this->assertTaskEvent('queue', $syncTask);
-        $this->assertTaskEvent('start', $syncTask);
+        $this->assertTaskEvent('queue', $syncTask)->andReturn(['success' => true]);
+        $this->assertTaskEvent('start', $syncTask)->andReturn(['success' => true]);
         $this->assertTaskEvent('end', $syncTask);
         
         $this->tasks->allows('fail');
@@ -77,8 +78,8 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->assertNotEmpty($events[2]->getTaskKey());
 
         $syncTask = $cronboard->getTasks()->values()[2];
-        $this->assertTaskEvent('queue', $syncTask);
-        $this->assertTaskEvent('start', $syncTask);
+        $this->assertTaskEvent('queue', $syncTask)->andReturn(['success' => true]);
+        $this->assertTaskEvent('start', $syncTask)->andReturn(['success' => true]);
         $this->assertTaskEvent('end', $syncTask);
         
         $this->tasks->allows('fail');
@@ -99,8 +100,8 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->assertNotEmpty($events[1]->getTaskKey());
 
         $queueTask = $cronboard->getTasks()->values()[1];
-        $this->assertTaskEvent('queue', $queueTask);
-        $this->assertTaskEventNotFired('start', $queueTask);
+        $this->assertTaskEvent('queue', $queueTask)->andReturn(['success' => true]);
+        $this->assertTaskEventNotFired('start', $queueTask)->andReturn(['success' => true]);
         $this->assertTaskEventNotFired('end', $queueTask);
         
         $this->tasks->allows('fail');
@@ -119,8 +120,8 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         $this->assertEquals(3, $cronboard->getTasks()->count());
 
         $queueTask = $cronboard->getTasks()->values()[1];
-        $this->assertTaskEvent('queue', $queueTask);
-        $this->assertTaskEvent('start', $queueTask);
+        $this->assertTaskEvent('queue', $queueTask)->andReturn(['success' => true]);
+        $this->assertTaskEvent('start', $queueTask)->andReturn(['success' => true]);
         $this->assertTaskEvent('end', $queueTask);
         
         $this->tasks->allows('fail');
@@ -153,6 +154,64 @@ class JobCommandScheduleTest extends ScheduleIntegrationTest
         // process job
         $queueWorker = $this->app->make('queue.worker');
         $queueWorker->runNextJob('database', 'default', $this->getWorkerOptions());
+    }
+
+    /** @test */
+    public function it_does_not_track_task_if_queue_failed()
+    {
+        $cronboard = $this->loadTasksIntoCronboard();
+
+        $events = $this->getSchedule()->dueEvents($this->app);
+
+        $this->assertEquals(4, $events->count());
+        $this->assertEquals(3, $cronboard->getTasks()->count());
+
+        $queueTask = $cronboard->getTasks()->values()[1];
+        $runtime = TaskRuntime::fromTask($queueTask);
+        $this->assertTrue($runtime->isTracked());
+
+        $this->assertTaskEvent('queue', $queueTask)->andReturn(['success' => false]);
+        $this->assertTaskEventNotFired('start', $queueTask);
+        $this->assertTaskEventNotFired('end', $queueTask);
+
+        // add job to the queue
+        $events[1]->run($this->app);
+
+        // process job
+        $queueWorker = $this->app->make('queue.worker');
+        $queueWorker->runNextJob('database', 'default', $this->getWorkerOptions());
+
+        // reset changes made to runtime
+        $runtime->startTracking();
+    }
+
+    /** @test */
+    public function it_does_not_track_task_if_start_failed()
+    {
+        $cronboard = $this->loadTasksIntoCronboard();
+
+        $events = $this->getSchedule()->dueEvents($this->app);
+
+        $this->assertEquals(4, $events->count());
+        $this->assertEquals(3, $cronboard->getTasks()->count());
+
+        $queueTask = $cronboard->getTasks()->values()[1];
+        $runtime = TaskRuntime::fromTask($queueTask);
+        $this->assertTrue($runtime->isTracked());
+        
+        $this->assertTaskEvent('queue', $queueTask)->andReturn(['success' => true]);
+        $this->assertTaskEvent('start', $queueTask)->andReturn(['success' => false]);
+        $this->assertTaskEventNotFired('end', $queueTask);
+
+        // add job to the queue
+        $events[1]->run($this->app);
+
+        // process job
+        $queueWorker = $this->app->make('queue.worker');
+        $queueWorker->runNextJob('database', 'default', $this->getWorkerOptions());
+
+        // reset changes made to runtime
+        $runtime->startTracking();
     }
 
     protected function getWorkerOptions(): WorkerOptions

@@ -22,6 +22,8 @@ use ReflectionClass;
 * @method void setActive($active = true)
 * @method void setTracking($tracking = true)
 * @method bool isTracked()
+* @method void stopTracking()
+* @method void startTracking()
 * @method bool isActive()
 * @method bool shouldExecuteImmediately()
 *

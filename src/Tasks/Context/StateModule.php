@@ -30,6 +30,8 @@ class StateModule extends Module
             'setOnce',
             'setActive',
             'setTracking',
+            'stopTracking',
+            'startTracking',
             'isTracked',
             'isActive',
             'shouldExecuteImmediately',
@@ -39,7 +41,7 @@ class StateModule extends Module
     public function shouldStoreAfter(string $hookName): bool
     {
         return in_array($hookName, [
-            'setOnce', 'setActive', 'setTracking'
+            'setOnce', 'setActive', 'setTracking', 'stopTracking', 'startTracking'
         ]);
     }
 
@@ -56,6 +58,16 @@ class StateModule extends Module
     public function setTracking($tracking = true)
     {
         $this->tracking = boolval($tracking);
+    }
+
+    public function stopTracking()
+    {
+        $this->setTracking(false);
+    }
+
+    public function startTracking()
+    {
+        $this->setTracking(true);
     }
 
     public function isTracked(): bool

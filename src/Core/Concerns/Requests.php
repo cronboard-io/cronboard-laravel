@@ -25,11 +25,11 @@ trait Requests
             return false;
         }
 
-        if ($context = $this->getTrackedTaskRuntime($task)) {
+        if ($runtime = $this->getTrackedTaskRuntime($task)) {
             if ($exception) {
-                $context->setException($exception);
+                $runtime->setException($exception);
             }
-            $response = $this->getClient()->tasks()->fail($task, $context);
+            $response = $this->getClient()->tasks()->fail($task, $runtime);
             return $response['success'] ?? false;
         }
 
@@ -42,12 +42,16 @@ trait Requests
             return false;
         }
 
-        if ($context = $this->getTrackedTaskRuntime($task)) {
-            $response = $this->getClient()->tasks()->start($task, $context);
+        if ($runtime = $this->getTrackedTaskRuntime($task)) {
+            $response = $this->getClient()->tasks()->start($task, $runtime);
             $success = $response['success'] ?? false;
 
-            if ($success && ($key = $response['key'] ?? null)) {
-                $this->switchToTaskInstance($task, $key);
+            if ($success) {
+                if ($key = $response['key'] ?? null) {
+                    $this->switchToTaskInstance($task, $key);    
+                }
+            } else {
+                $runtime->stopTracking();
             }
 
             return $success;
@@ -62,8 +66,8 @@ trait Requests
             return false;
         }
 
-        if ($context = $this->getTrackedTaskRuntime($task)) {
-            $response = $this->getClient()->tasks()->end($task, $context);
+        if ($runtime = $this->getTrackedTaskRuntime($task)) {
+            $response = $this->getClient()->tasks()->end($task, $runtime);
             return $response['success'] ?? false;
         }
 
@@ -77,15 +81,20 @@ trait Requests
         }
 
         return $this->catchInternalExceptionsInCallback(function() use ($task) {
-            if ($context = $this->getTrackedTaskRuntime($task)) {
-                $response = $this->getClient()->tasks()->queue($task, $context);
+            if ($runtime = $this->getTrackedTaskRuntime($task)) {
+                $response = $this->getClient()->tasks()->queue($task, $runtime);
+                $success = $response['success'] ?? false;
 
-                if ($responseKey = $response['key'] ?? false) {
-                    // add queue task to current task list, so that it can be picked up if
-                    // we're executing jobs using the sync driver
-                    $queuedTask = $task->aliasAsRuntimeInstance($responseKey);
+                if ($success) {
+                    if ($responseKey = $response['key'] ?? false) {
+                        // add queue task to current task list, so that it can be picked up if
+                        // we're executing jobs using the sync driver
+                        $queuedTask = $task->aliasAsRuntimeInstance($responseKey);
 
-                    return $this->switchToTaskInstance($task, $responseKey, $queuedTask);
+                        return $this->switchToTaskInstance($task, $responseKey, $queuedTask);
+                    }
+                } else {
+                    $runtime->stopTracking();
                 }
 
                 return $task;

@@ -2,7 +2,7 @@
 
 namespace Cronboard\Console;
 
-use Cronboard\Core\Exception;
+use Exception;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;

@@ -21,7 +21,7 @@ class Output
 
     public function outputException(Exception $exception): Output
     {
-        return $this->disabled($exception->getMessage());
+        return $this->disabled('Cronboard encountered an error: ' . $exception->getMessage());
     }
 
     public function silent(string $text): Output

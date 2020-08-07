@@ -80,7 +80,7 @@ trait Boot
         $discoverAction = new DiscoverCommandsAndTasks($this->app);
         $snapshot = $discoverAction->getSnapshot();
 
-        if ($discoverAction->snapshotWasInvalid()) {
+        if ($discoverAction->snapshotWasInvalid() && ! $this->isRecording()) {
             $this->reportException(new CronboardException('Cronboard snapshot appears to be invalid. Please make sure to run `cronboard:record` after changes to your codebase'));
         }
 
@@ -100,6 +100,15 @@ trait Boot
                 TaskContext::enter($task);
             }
         }
+    }
+
+    private function isRecording()
+    {
+        if (! $this->app->runningInConsole()) return false;
+
+        $commandContext = new CommandContext($this->app);
+
+        return $commandContext->inCommandContext('cronboard:record');
     }
 
     private function shouldContactRemote(Snapshot $snapshot): bool

@@ -10,6 +10,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
+use ReflectionClass;
 
 final class DiscoverCommandsInCodebase
 {
@@ -67,8 +68,18 @@ final class DiscoverCommandsInCodebase
                     return null;
                 }
 
+                if (! $this->isBuildable($className)) {
+                    return null;
+                }
+
                 return $builder->fromClass($className);
             })
-            ->filter()->values();
+            ->filter()
+            ->values();
+    }
+
+    protected function isBuildable(string $className): bool
+    {
+        return ! (new ReflectionClass($className))->isAbstract();
     }
 }

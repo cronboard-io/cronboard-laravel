@@ -28,12 +28,12 @@ class FromClass
 
     protected function getCommandFromClass(string $class, $instance = null): ?Command
     {
-        if (!class_exists($class)) {
+        if (! class_exists($class)) {
             return null;
         }
         if ($this->isConsoleCommand($class)) {
             $alias = null;
-            if (!empty($class) && class_exists($class)) {
+            if (! empty($class) && class_exists($class)) {
                 $instance = $instance ?: $this->container->make($class);
                 $alias = $instance->getName();
             }

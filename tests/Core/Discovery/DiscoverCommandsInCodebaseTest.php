@@ -25,7 +25,7 @@ class DiscoverCommandsInCodebaseTest extends TestCase
     		->useBasePath($path)
     		->useRootNamespace('Cronboard\Tests\Stubs\\')
     		->getCommands();
-    	
+
     	$this->assertEquals($commands->count(), 5);
 
         $commands = $commands->keyBy(function($command){

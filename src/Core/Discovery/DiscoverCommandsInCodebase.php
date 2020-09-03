@@ -15,7 +15,7 @@ use ReflectionClass;
 final class DiscoverCommandsInCodebase
 {
     use IgnoresPathsOrClasses;
-    
+
     private $directories = [];
     private $ignoredFiles = [];
 
@@ -80,6 +80,6 @@ final class DiscoverCommandsInCodebase
 
     protected function isBuildable(string $className): bool
     {
-        return ! (new ReflectionClass($className))->isAbstract();
+        return class_exists($className) && ! (new ReflectionClass($className))->isAbstract();
     }
 }

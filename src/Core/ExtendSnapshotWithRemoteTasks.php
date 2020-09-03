@@ -36,11 +36,12 @@ class ExtendSnapshotWithRemoteTasks
         try {
             $environmentInfo = (new Environment($this->app))->toArray();
             $environment = Arr::get($environmentInfo, 'environment');
+            $cli = $environmentInfo['cli.command'] ?? null;
 
             // get remote tasks
             $response = $this->app->make(Client::class)
                 ->cronboard()
-                ->schedule($environment);
+                ->schedule($environment, $cli ?: '');
 
             $scheduleTasksPayload = Collection::wrap($response['tasks']);
             $tasksPayload = $scheduleTasksPayload->merge($response['queuedTasks']);

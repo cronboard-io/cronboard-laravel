@@ -3,6 +3,7 @@
 namespace Cronboard\Support;
 
 use Cronboard\Core\Cronboard;
+use Cronboard\Support\CommandContext;
 use Cronboard\Support\Composer;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Support\Arrayable;
@@ -68,8 +69,11 @@ class Environment implements Arrayable
 
     private function getEnvironmentInformation(): array
     {
+        $commandContext = new CommandContext($this->app);
+
         return [
-            'php.version' => phpversion()
+            'php.version' => phpversion(),
+            'cli.command' => $commandContext->getConsoleCommandName()
         ];
     }
 }

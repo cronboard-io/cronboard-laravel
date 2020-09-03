@@ -48,7 +48,7 @@ class CommandContext
         return false;
     }
 
-    private function getConsoleCommandName(): ?string
+    public function getConsoleCommandName(): ?string
     {
         static $commandName = null;
 
@@ -67,6 +67,11 @@ class CommandContext
     public function getQueueWorkerContextCommands(): array
     {
         return ['queue:work', 'queue:listen'];
+    }
+
+    public function isBootableConsoleContext(): bool
+    {
+        return $this->isSchedulerContext() || $this->isQueueWorkerContext();
     }
 
     public function isSchedulerContext(): bool

@@ -11,8 +11,15 @@ class Schedule extends LaravelSchedule
 
     public static function createWithEventsFrom(LaravelSchedule $schedule): Schedule
     {
-        $instance = new static;
+        $instance = new static($this->getScheduleTimezone());
         $instance->events = $schedule->events();
         return $instance;
+    }
+
+    private function getScheduleTimezone()
+    {
+    	$config = resolve('config');
+
+        return $config->get('app.schedule_timezone', $config->get('app.timezone'));
     }
 }

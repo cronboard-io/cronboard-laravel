@@ -71,10 +71,7 @@ class CronboardServiceProvider extends ServiceProvider
             });
 
             Event::listen(ArtisanStarting::class, function() {
-                $isTesting = $this->app->environment('testing');
-                if ((new CommandContext($this->app))->isBootableConsoleContext() || $isTesting) {
-                    $this->app['cronboard']->boot();
-                }
+                $this->app['cronboard']->boot();
             });
 
             Event::subscribe(TaskEventSubscriber::class);

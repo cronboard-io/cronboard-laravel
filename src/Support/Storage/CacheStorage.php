@@ -2,6 +2,7 @@
 
 namespace Cronboard\Support\Storage;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Cache\Factory;
 
 class CacheStorage implements Storage
@@ -15,7 +16,7 @@ class CacheStorage implements Storage
 
     public function store(string $key, $value)
     {
-        $this->cache->forever($key, $value);
+        $this->cache->put($key, $value, Carbon::now()->addHours(1));
     }
 
     public function get(string $key, $default = null)

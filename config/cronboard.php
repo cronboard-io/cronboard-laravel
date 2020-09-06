@@ -38,11 +38,11 @@ return [
     ],
 
     'errors' => [
-        // if true errors will caught in order to prevent any
+        // if `true` errors will be caught in order to prevent any
         // disruptions in the cron schedule
         'silent' => true,
 
-        // forward exception to handler
-        'report' => true,
+        // forward exception to application's error handler
+        'report' => false,
     ]
 ];

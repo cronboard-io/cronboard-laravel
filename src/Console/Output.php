@@ -2,7 +2,7 @@
 
 namespace Cronboard\Console;
 
-use Exception;
+use Throwable;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,7 +19,7 @@ class Output
         $this->defineOutputStyles();
     }
 
-    public function outputException(Exception $exception): Output
+    public function outputException(Throwable $exception): Output
     {
         return $this->disabled('Cronboard encountered an error: ' . $exception->getMessage());
     }

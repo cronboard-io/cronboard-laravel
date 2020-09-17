@@ -10,7 +10,7 @@ use Cronboard\Core\Exception as CronboardException;
 use Cronboard\Core\ExtendSnapshotWithRemoteTasks;
 use Cronboard\Support\CommandContext;
 use Cronboard\Tasks\Resolver;
-use Exception;
+use Throwable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Collection;
 
@@ -21,7 +21,7 @@ trait Boot
 
     abstract protected function getConfiguration(): Configuration;
     abstract protected function bootErrorHandling();
-    abstract protected function reportException(Exception $exception);
+    abstract protected function reportException(Throwable $exception);
     abstract public function loadSnapshot(Snapshot $snapshot);
     abstract public function trackSchedule(Schedule $schedule);
 
@@ -48,7 +48,7 @@ trait Boot
 
                 $this->bootFromSnapshot();
                 $this->bootCurrentTaskContext();
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 $this->reportException($e);
             }
 

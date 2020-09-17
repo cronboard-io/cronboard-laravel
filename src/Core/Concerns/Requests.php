@@ -8,18 +8,18 @@ use Cronboard\Core\Context\TaskContext;
 use Cronboard\Core\Exception as InternalException;
 use Cronboard\Tasks\Task;
 use Cronboard\Tasks\TaskRuntime;
-use Exception;
+use Throwable;
 
 trait Requests
 {
     abstract protected function getTrackedTaskRuntime(Task $task = null): ?TaskRuntime;
     abstract protected function isOffline(): bool;
     abstract public function getClient(): Client;
-    abstract public function reportException(Exception $exception);
+    abstract public function reportException(Throwable $exception);
     abstract public function getTaskByKey(string $key = null): ?Task;
     abstract protected function registerNewTask(string $key, Task $task);
 
-    public function fail(Task $task, Exception $exception = null): bool
+    public function fail(Task $task, Throwable $exception = null): bool
     {
         if ($this->isOffline()) {
             return false;

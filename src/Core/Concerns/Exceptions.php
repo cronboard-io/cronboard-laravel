@@ -8,7 +8,7 @@ use Cronboard\Core\Configuration;
 use Cronboard\Core\Context\TaskContext;
 use Cronboard\Core\Exception as CronboardException;
 use Cronboard\Core\Execution\Events\TaskFailed;
-use Exception;
+use Throwable;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -46,16 +46,16 @@ trait Exceptions
         }
     }
 
-    private function getTaskExceptionFromMessageLogged(MessageLogged $event): ?Exception
+    private function getTaskExceptionFromMessageLogged(MessageLogged $event): ?Throwable
     {
         $exception = $event->context['exception'] ?? null;
-        if ($exception && $exception instanceof Exception && ! $exception instanceof CronboardException) {
+        if ($exception && $exception instanceof Throwable && ! $exception instanceof CronboardException) {
             return $exception;
         }
         return null;
     }
 
-    public function reportException(Exception $exception)
+    public function reportException(Throwable $exception)
     {
         if ($this->consoleOutput) {
             $this->consoleOutput->outputException($exception);

@@ -35,8 +35,8 @@ use ReflectionClass;
 *
 * @method \Cronboard\Core\Execution\Collectors\Collector getCollector()
 *
-* @method void setException(Exception $exception)
-* @method ?Exception getException()
+* @method void setException(Throwable $exception)
+* @method array getException()
 *
 * @method \Cronboard\Support\Environment getEnvironment()
 */

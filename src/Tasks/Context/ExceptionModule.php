@@ -2,7 +2,7 @@
 
 namespace Cronboard\Tasks\Context;
 
-use Exception;
+use Throwable;
 
 class ExceptionModule extends Module
 {
@@ -33,12 +33,12 @@ class ExceptionModule extends Module
         return $hookName === 'setException';
     }
 
-    public function setException(Exception $exception)
+    public function setException(Throwable $exception)
     {
         $this->exception = $this->exceptionToArray($exception);
     }
 
-    private function exceptionToArray(Exception $exception = null)
+    private function exceptionToArray(Throwable $exception = null)
     {
         return [
             'class' => get_class($exception),

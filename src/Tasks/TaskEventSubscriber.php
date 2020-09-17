@@ -12,7 +12,7 @@ use Cronboard\Core\Reflection\Parameters;
 use Cronboard\Support\Helpers;
 use Cronboard\Tasks\Resolver;
 use Cronboard\Tasks\Task;
-use Exception as BaseException;
+use Throwable;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Container\Container;
@@ -136,7 +136,7 @@ class TaskEventSubscriber
         }
     }
 
-    protected function failTask(Task $task, BaseException $exception)
+    protected function failTask(Task $task, Throwable $exception)
     {
         try {
         	$task->setFailed();
